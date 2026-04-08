@@ -1,6 +1,6 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 const VoxelCloud = () => {
@@ -65,6 +65,11 @@ const TargetBox = () => {
   return (
     <lineSegments position={[2, -5, -3]} geometry={geo}>
       <lineBasicMaterial color={0x22c55e} />
+      <Html position={[0, 9, 0]} center distanceFactor={25}>
+        <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-green-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+          GOLDEN ZONE TARGET
+        </div>
+      </Html>
     </lineSegments>
   );
 };
@@ -115,8 +120,8 @@ const InversionScene = ({ onDepthChange }: InversionSceneProps) => {
       camera={{ position: [40, 30, 50], fov: 45, near: 0.1, far: 1000 }}
       style={{ background: "black" }}
     >
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[20, 50, 20]} intensity={0.8} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[20, 50, 20]} intensity={1.5} />
       <fogExp2 attach="fog" args={["#0B0F19", 0.015]} />
       <group>
         <SurfaceGrid />

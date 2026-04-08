@@ -1,6 +1,6 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 const PlasmaSimulation = () => {
@@ -73,7 +73,7 @@ const PlasmaSimulation = () => {
       {/* Tunnel */}
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[4, 4, 40, 16]} />
-        <meshStandardMaterial color={0x475569} roughness={0.9} side={THREE.BackSide} wireframe transparent opacity={0.6} />
+        <meshStandardMaterial color={0x94A3B8} roughness={0.9} side={THREE.BackSide} wireframe transparent opacity={0.8} />
       </mesh>
 
       {/* Drill String */}
@@ -86,7 +86,12 @@ const PlasmaSimulation = () => {
       <group position={[-2.5, 0, 0]}>
         <mesh rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[1.6, 1.6, 4, 8]} />
-          <meshStandardMaterial color={0x1e3a8a} metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color={0x2563EB} emissive={0x1D4ED8} emissiveIntensity={0.5} metalness={0.7} roughness={0.3} />
+          <Html position={[0, -2, 0]} center distanceFactor={25}>
+            <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-blue-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+              AI ROBOTICS MODULE
+            </div>
+          </Html>
         </mesh>
         {/* LED Rings */}
         <mesh rotation={[0, Math.PI / 2, 0]} position={[1.5, 0, 0]}>
@@ -141,7 +146,12 @@ const PlasmaSimulation = () => {
       {/* Plasma Arc */}
       <mesh ref={plasmaArcRef} rotation={[0, 0, -Math.PI / 2]} position={[4.0, 0, 0]}>
         <cylinderGeometry args={[0.1, 1.2, 3, 16]} />
-        <meshBasicMaterial color={0xA855F7} transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+        <meshBasicMaterial color={0xD8B4FE} transparent opacity={0.9} blending={THREE.AdditiveBlending} />
+        <Html position={[0, -2, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-purple-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            PLASMA ARC (THERMAL SPALLATION)
+          </div>
+        </Html>
       </mesh>
 
       {/* Plasma Core */}
@@ -150,7 +160,7 @@ const PlasmaSimulation = () => {
         <meshBasicMaterial color={0xffffff} transparent opacity={0.9} blending={THREE.AdditiveBlending} />
       </mesh>
 
-      <pointLight ref={plasmaLightRef} position={[0, 0, 0]} color={0xA855F7} intensity={3} distance={20} />
+      <pointLight ref={plasmaLightRef} position={[0, 0, 0]} color={0xD8B4FE} intensity={6} distance={20} />
 
       {/* Spallation Particles */}
       <points ref={particleRef}>
@@ -169,9 +179,9 @@ const PlasmaScene = () => {
       camera={{ position: [-15, 5, -20], fov: 50, near: 0.1, far: 100 }}
       style={{ background: "black" }}
     >
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[-10, 20, -10]} intensity={0.6} />
-      <pointLight position={[-5, 0, 0]} intensity={1.5} distance={40} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[-10, 20, -10]} intensity={1.2} />
+      <pointLight position={[-5, 0, 0]} intensity={3} distance={40} />
       <fogExp2 attach="fog" args={["#000000", 0.03]} />
       <PlasmaSimulation />
       <OrbitControls enableDamping dampingFactor={0.05} />

@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Cube, Cpu } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 import { Fire, ThermometerHot, Lightning, Broadcast, Robot, ArrowRight, ArrowDown, Leaf, GasPump, Drop } from "@phosphor-icons/react";
@@ -9,6 +9,30 @@ import ContactForm from "@/components/ContactForm";
 const ReactorScene = lazy(() => import("@/components/three/ReactorScene"));
 
 const Index = () => {
+  const [activeTourStep, setActiveTourStep] = useState<number | null>(null);
+  const [isTourActive, setIsTourActive] = useState(false);
+
+  // Auto-advance tour logic
+  useEffect(() => {
+    if (!isTourActive || activeTourStep === null) return;
+    
+    const timer = setTimeout(() => {
+      if (activeTourStep < 4) {
+        setActiveTourStep(activeTourStep + 1);
+      } else {
+        setIsTourActive(false);
+        setActiveTourStep(null);
+      }
+    }, 10000); // 10 seconds per step
+    
+    return () => clearTimeout(timer);
+  }, [isTourActive, activeTourStep]);
+
+  const startTour = (step: number) => {
+    setIsTourActive(true);
+    setActiveTourStep(step);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -49,7 +73,7 @@ const Index = () => {
       {/* 3D Reactor Section */}
       <section id="reactor-3d" className="relative w-full h-[100vh] min-h-[800px] bg-black border-y border-white/10">
         <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading 3D Reactor...</div>}>
-          <ReactorScene />
+          <ReactorScene activeTourStep={activeTourStep} isTourActive={isTourActive} />
         </Suspense>
 
         {/* Overlay */}
@@ -93,6 +117,26 @@ const Index = () => {
                     <span className="text-foreground/70">Hy10 Gas <span className="text-[10px] text-muted-foreground">(Up)</span></span>
                   </div>
                 </div>
+              </div>
+            </div>
+            {/* Guided Tour Control Panel */}
+            <div className="glass-panel p-4 lg:p-6 rounded-xl w-full lg:flex-1 relative overflow-hidden pointer-events-auto shrink-0 mt-4 lg:mt-0">
+              <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Guided Simulation Tour</h3>
+                <span className="text-xs font-mono text-geo-orange">{isTourActive ? "EXAMINING PROCESS (10s)" : "READY"}</span>
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 relative z-10">
+                <button onClick={() => startTour(0)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-geo-blue ${activeTourStep === 0 ? 'bg-white/20' : ''}`}>1. Injection Mix</button>
+                <button onClick={() => startTour(1)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-red-500 ${activeTourStep === 1 ? 'bg-white/20' : ''}`}>2. Synthesis Lattice</button>
+                <button onClick={() => startTour(2)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-[#EA580C] ${activeTourStep === 2 ? 'bg-white/20' : ''}`}>3. Heat Exchanger</button>
+                <button onClick={() => startTour(3)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-yellow-500 ${activeTourStep === 3 ? 'bg-white/20' : ''}`}>4. Separation & Storage</button>
+                <button onClick={() => startTour(4)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-purple-500 ${activeTourStep === 4 ? 'bg-white/20' : ''}`}>5. Co-Gen Turbines</button>
+              </div>
+              {/* Progress Bar Background */}
+              <div className="absolute top-0 left-0 h-1 bg-white/5 w-full">
+                {isTourActive && (
+                  <div key={activeTourStep} className="h-full bg-gradient-to-r from-geo-orange to-yellow-400 w-full animate-[expand_10s_linear]" />
+                )}
               </div>
             </div>
           </div>

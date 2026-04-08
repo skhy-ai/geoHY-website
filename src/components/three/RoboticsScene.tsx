@@ -1,17 +1,17 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 
 const Tunnel = () => (
   <group>
     <mesh rotation={[Math.PI / 2, 0, 0]}>
       <cylinderGeometry args={[4, 4, 60, 32]} />
-      <meshStandardMaterial color={0x2d3748} roughness={1} metalness={0.1} side={THREE.BackSide} />
+      <meshStandardMaterial color={0x64748B} roughness={1} metalness={0.1} side={THREE.BackSide} />
     </mesh>
     <mesh rotation={[Math.PI / 2, 0, 0]}>
       <cylinderGeometry args={[3.95, 3.95, 60, 16, 20]} />
-      <meshBasicMaterial color={0x475569} wireframe transparent opacity={0.2} />
+      <meshBasicMaterial color={0x94A3B8} wireframe transparent opacity={0.4} />
     </mesh>
   </group>
 );
@@ -51,7 +51,7 @@ const Robot = () => {
           </mesh>
           <mesh position={[0, 2.5, 0]}>
             <boxGeometry args={[1.5, 0.2, 3]} />
-            <meshStandardMaterial color={0x333333} metalness={0.4} roughness={0.9} />
+            <meshStandardMaterial color={0x475569} metalness={0.4} roughness={0.9} />
           </mesh>
         </group>
       );
@@ -102,7 +102,12 @@ const Robot = () => {
       {/* Chassis */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[1.2, 1.2, 5, 16]} />
-        <meshStandardMaterial color={0x1e3a8a} metalness={0.8} roughness={0.4} />
+        <meshStandardMaterial color={0x2563EB} emissive={0x1D4ED8} emissiveIntensity={0.5} metalness={0.8} roughness={0.4} />
+        <Html position={[0, 2, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-blue-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            AUTONOMOUS ROBOTICS CHASSIS
+          </div>
+        </Html>
       </mesh>
       {/* Sensor Rings */}
       <mesh position={[0, 0, 1.5]}>
@@ -119,9 +124,14 @@ const Robot = () => {
       <group ref={reamerRef} position={[0, 0, -3]}>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[1.0, 1.8, 1.5, 16]} />
-          <meshStandardMaterial color={0x94A3B8} metalness={0.9} roughness={0.2} />
+          <meshStandardMaterial color={0xCBD5E1} metalness={0.9} roughness={0.2} />
         </mesh>
         {teeth}
+        <Html position={[0, 2, 0]} center distanceFactor={20}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-red-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            MECHANICAL REAMER
+          </div>
+        </Html>
       </group>
       {/* Debris Particles */}
       <points ref={particleRef}>
@@ -140,9 +150,9 @@ const RoboticsScene = () => {
       camera={{ position: [0, 0, 10], fov: 60, near: 0.1, far: 100 }}
       style={{ background: "black" }}
     >
-      <ambientLight intensity={0.3} />
-      <pointLight position={[0, 0, 2]} intensity={1.5} distance={30} />
-      <pointLight position={[0, 0, -20]} color={0xEA580C} intensity={1} distance={50} />
+      <ambientLight intensity={0.6} />
+      <pointLight position={[0, 0, 2]} intensity={3} distance={30} />
+      <pointLight position={[0, 0, -20]} color={0xEA580C} intensity={2} distance={50} />
       <fogExp2 attach="fog" args={["#000000", 0.05]} />
       <Tunnel />
       <Robot />

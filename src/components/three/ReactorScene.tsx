@@ -2,15 +2,16 @@ import { useRef, useMemo, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { Html } from "@react-three/drei";
 
 // Surface Plant Components
 const SurfacePlant = () => {
-  const metalMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.3 }), []);
-  const glassWater = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x0EA5E9, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 }), []);
-  const glassCO2 = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xA855F7, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 }), []);
-  const glassHy10 = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x22D3EE, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 }), []);
-  const glassHC = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFBBF24, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 }), []);
-  const hxMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x333333, emissive: new THREE.Color(0x9A3412), metalness: 0.8, roughness: 0.4 }), []);
+  const metalMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x64748B, metalness: 0.8, roughness: 0.2 }), []);
+  const glassWater = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x38BDF8, transparent: true, opacity: 0.6, metalness: 0.2, roughness: 0.1 }), []);
+  const glassCO2 = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xC084FC, transparent: true, opacity: 0.6, metalness: 0.2, roughness: 0.1 }), []);
+  const glassHy10 = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x22D3EE, transparent: true, opacity: 0.6, metalness: 0.2, roughness: 0.1 }), []);
+  const glassHC = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xFCD34D, transparent: true, opacity: 0.6, metalness: 0.2, roughness: 0.1 }), []);
+  const hxMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0x444444, emissive: new THREE.Color(0xF97316), emissiveIntensity: 0.5, metalness: 0.8, roughness: 0.4 }), []);
 
   return (
     <group>
@@ -23,6 +24,11 @@ const SurfacePlant = () => {
       {/* Wellhead */}
       <mesh position={[0, 1.5, 0]} material={metalMat}>
         <cylinderGeometry args={[1.5, 1.5, 3, 16]} />
+        <Html position={[0, 3, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-geo-orange/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            WELLHEAD
+          </div>
+        </Html>
       </mesh>
 
       {/* Water Supply Tank */}
@@ -37,6 +43,11 @@ const SurfacePlant = () => {
       {/* CO2 Supply Sphere */}
       <mesh position={[-12, 4, -8]} material={glassCO2}>
         <sphereGeometry args={[4, 32, 32]} />
+        <Html position={[0, 5, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-purple-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            CO2 INJECTION
+          </div>
+        </Html>
       </mesh>
       <mesh position={[-12, 4, -8]}>
         <sphereGeometry args={[3.8, 32, 32]} />
@@ -46,11 +57,21 @@ const SurfacePlant = () => {
       {/* Heat Exchanger */}
       <mesh position={[8, 2, 0]} material={hxMat}>
         <boxGeometry args={[6, 4, 8]} />
+        <Html position={[0, 4, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-red-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            HEAT EXCHANGER
+          </div>
+        </Html>
       </mesh>
 
       {/* Separator */}
       <mesh position={[16, 7, 0]} material={metalMat}>
         <cylinderGeometry args={[2, 2, 14, 32]} />
+        <Html position={[0, 9, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-blue-400/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            SEPARATOR
+          </div>
+        </Html>
       </mesh>
 
       {/* Hy10 Storage */}
@@ -112,7 +133,12 @@ const ORCTurbine = () => {
       {/* Housing */}
       <mesh rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[2.2, 2.2, 6, 32]} />
-        <meshStandardMaterial color={0x4C1D95} metalness={0.6} roughness={0.4} transparent opacity={0.3} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={0x6D28D9} emissive={0x4C1D95} emissiveIntensity={0.5} metalness={0.6} roughness={0.4} transparent opacity={0.4} side={THREE.DoubleSide} />
+        <Html position={[0, 3, 0]} center distanceFactor={25}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-yellow-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            ORC TURBINE
+          </div>
+        </Html>
       </mesh>
       {/* Rotor */}
       <group ref={rotorRef} rotation={[0, 0, Math.PI / 2]}>
@@ -142,7 +168,7 @@ const Derrick = () => {
 
 // Underground structure
 const Underground = () => {
-  const lateralMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xEA580C, metalness: 0.5, roughness: 0.5, emissive: new THREE.Color(0x7C2D12) }), []);
+  const lateralMat = useMemo(() => new THREE.MeshStandardMaterial({ color: 0xF97316, metalness: 0.5, roughness: 0.5, emissive: new THREE.Color(0xEA580C), emissiveIntensity: 0.8 }), []);
 
   const branches = useMemo(() => {
     const items: JSX.Element[] = [];
@@ -186,6 +212,11 @@ const Underground = () => {
           <cylinderGeometry args={[0.4, 0.4, 40, 16]} />
         </mesh>
         {branches}
+        <Html position={[0, -2, 10]} center distanceFactor={35}>
+          <div className="px-2 py-1 bg-black/60 backdrop-blur-sm border border-red-500/50 text-[10px] text-white rounded font-mono whitespace-nowrap">
+            EXOTHERMIC REACTION ZONE
+          </div>
+        </Html>
       </group>
     </group>
   );
@@ -374,11 +405,11 @@ const Piping = () => {
 };
 
 // Slow auto-rotation group
-const RotatingGroup = () => {
+const RotatingGroup = ({ isTourActive }: { isTourActive: boolean }) => {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
-    if (groupRef.current) groupRef.current.rotation.y += 0.001;
+    if (groupRef.current && !isTourActive) groupRef.current.rotation.y += 0.001;
   });
 
   return (
@@ -393,18 +424,49 @@ const RotatingGroup = () => {
   );
 };
 
-const ReactorScene = () => {
+
+// Tour Camera Controller
+const TourCameraController = ({ activeStep, isTourActive, controlsRef }: { activeStep: number | null, isTourActive: boolean, controlsRef: React.MutableRefObject<any> }) => {
+  const tourPhases = useMemo(() => [
+    { pos: new THREE.Vector3(-18, 12, 18), target: new THREE.Vector3(-12, 2, 0) },
+    { pos: new THREE.Vector3(0, -50, 25), target: new THREE.Vector3(0, -78, 0) },
+    { pos: new THREE.Vector3(8, 15, 15), target: new THREE.Vector3(8, 2, 0) },
+    { pos: new THREE.Vector3(24, 15, 15), target: new THREE.Vector3(20, 2, 0) },
+    { pos: new THREE.Vector3(8, 15, -25), target: new THREE.Vector3(8, 2, -10) }
+  ], []);
+
+  useFrame((state) => {
+    if (isTourActive && activeStep !== null && tourPhases[activeStep]) {
+      const targetPhase = tourPhases[activeStep];
+      // Lerp camera position
+      state.camera.position.lerp(targetPhase.pos, 0.03);
+      
+      // Lerp custom controls target
+      if (controlsRef.current && controlsRef.current.target) {
+        controlsRef.current.target.lerp(targetPhase.target, 0.03);
+      }
+    }
+  });
+
+  return null;
+};
+
+const ReactorScene = ({ activeTourStep, isTourActive }: { activeTourStep?: number | null, isTourActive?: boolean }) => {
+  const controlsRef = useRef<any>(null);
+
   return (
     <Canvas
       camera={{ position: [40, 20, 60], fov: 45, near: 0.1, far: 1000 }}
       style={{ background: "#0B0F19" }}
     >
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[50, 100, 50]} intensity={0.8} />
-      <pointLight position={[0, -90, 0]} color={0xEA580C} intensity={2} distance={200} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[50, 100, 50]} intensity={1.2} />
+      <pointLight position={[0, -90, 0]} color={0xEA580C} intensity={4} distance={200} />
       <fog attach="fog" args={["#0B0F19", 100, 400]} />
-      <RotatingGroup />
+      <TourCameraController activeStep={activeTourStep ?? null} isTourActive={!!isTourActive} controlsRef={controlsRef} />
+      <RotatingGroup isTourActive={!!isTourActive} />
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.05}
         maxPolarAngle={Math.PI / 2 + 0.1}

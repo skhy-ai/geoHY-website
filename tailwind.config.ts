@@ -93,10 +93,15 @@ export default {
             height: "0",
           },
         },
+        "expand": {
+          "0%": { width: "0%" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "expand": "expand 10s linear forwards",
       },
     },
   },
