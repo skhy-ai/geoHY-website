@@ -25,6 +25,7 @@ export type Database = {
           location: string | null
           message: string
           name: string
+          user_id: string | null
         }
         Insert: {
           company?: string | null
@@ -36,6 +37,7 @@ export type Database = {
           location?: string | null
           message: string
           name: string
+          user_id?: string | null
         }
         Update: {
           company?: string | null
@@ -47,9 +49,125 @@ export type Database = {
           location?: string | null
           message?: string
           name?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contact_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
+      profiles: {
+        Row: {
+          access_tier: string
+          company: string | null
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          access_tier?: string
+          company?: string | null
+          created_at?: string
+          id: string
+          name: string
+        }
+        Update: {
+          access_tier?: string
+          company?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      simulator_sessions: {
+        Row: {
+          cost_per_tonne_usd: number | null
+          created_at: string
+          geology_source: string | null
+          heat_flow_mw_m2: number | null
+          hy10_mass_tonnes: number | null
+          id: string
+          initial_lattice_km: number | null
+          interventions_json: Json | null
+          lat: number
+          lng: number
+          region: string
+          reservoir_pressure_mpa: number | null
+          seal_caprock: string | null
+          site_depth_km: number | null
+          total_capex_usd: number | null
+          total_opex_usd: number | null
+          total_volume_mm3: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cost_per_tonne_usd?: number | null
+          created_at?: string
+          geology_source?: string | null
+          heat_flow_mw_m2?: number | null
+          hy10_mass_tonnes?: number | null
+          id?: string
+          initial_lattice_km?: number | null
+          interventions_json?: Json | null
+          lat: number
+          lng: number
+          region: string
+          reservoir_pressure_mpa?: number | null
+          seal_caprock?: string | null
+          site_depth_km?: number | null
+          total_capex_usd?: number | null
+          total_opex_usd?: number | null
+          total_volume_mm3?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cost_per_tonne_usd?: number | null
+          created_at?: string
+          geology_source?: string | null
+          heat_flow_mw_m2?: number | null
+          hy10_mass_tonnes?: number | null
+          id?: string
+          initial_lattice_km?: number | null
+          interventions_json?: Json | null
+          lat?: number
+          lng?: number
+          region?: string
+          reservoir_pressure_mpa?: number | null
+          seal_caprock?: string | null
+          site_depth_km?: number | null
+          total_capex_usd?: number | null
+          total_opex_usd?: number | null
+          total_volume_mm3?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
     }
     Views: {
       [_ in never]: never

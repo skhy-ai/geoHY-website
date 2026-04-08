@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan Geologic Hydrogen Exploration Map</title>
+    
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111827; overflow: hidden; }
+        #map { height: 100vh; width: 100%; z-index: 1; }
+        
+        /* Leaflet Overrides */
+        .leaflet-control-layers { background: rgba(31, 41, 55, 0.9) !important; color: #e5e7eb !important; border: 1px solid #4b5563 !important; }
+        .leaflet-control-layers-expanded { padding: 10px; border-radius: 8px; }
+        
+        /* Legend Styling */
+        .info.legend {
+            padding: 10px 14px;
+            font: 13px/16px Arial, Helvetica, sans-serif;
+            background: rgba(17, 24, 39, 0.9);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            color: #d1d5db;
+            border: 1px solid #374151;
+        }
+        .info.legend h4 { margin: 0 0 8px; color: #9ca3af; border-bottom: 1px solid #4b5563; padding-bottom: 4px;}
+        .legend i { width: 16px; height: 16px; float: left; margin-right: 8px; opacity: 0.8; }
+        .legend .line-dashed { border-bottom: 2px dashed #facc15; height: 0; margin-top: 9px; opacity: 1; background: none; }
+        .legend .line-solid { border-bottom: 2px solid #ffffff; height: 0; margin-top: 9px; opacity: 1; background: none; }
+        .legend .well-icon { border-radius: 50%; width: 10px; height: 10px; background: #0ea5e9; border: 2px solid #0284c7; display: inline-block; margin-right: 8px; margin-top: 4px; }
+
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ea580c; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        
+        .expense-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 2px 0; border-bottom: 1px solid rgba(75, 85, 99, 0.4); color: #d1d5db;}
+        .expense-row:last-child { border-bottom: none; }
+        .expense-val { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+        .seismic-warning {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            color: #b45309;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="relative text-gray-200">
+
+    <!-- Leaflet Map Container -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- Map Title Box -->
+    <div class="absolute top-4 left-12 z-[1000] bg-gray-900/90 backdrop-blur border border-gray-700 p-4 rounded-xl shadow-2xl max-w-[340px] pointer-events-auto">
+        <h1 class="m-0 text-lg font-bold text-orange-500 uppercase tracking-wide flex items-center gap-2">
+            Japan Georeactor Map
+        </h1>
+        <p class="mt-1 text-xs text-gray-400 leading-relaxed">Targeting Geologic Hydrogen in an Island Arc: Subduction Ophiolites, Magmatic Heat, and Neogene Mudstone Seals.</p>
+        <div class="mt-3 bg-orange-500/20 border border-orange-500/50 text-orange-300 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+            <span class="text-lg">👆</span> Click any formation to run the Drill Simulator.
+        </div>
+    </div>
+
+    <!-- Year 1 Drill Configuration Modal -->
+    <div id="drillModal" class="hidden absolute inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-orange-500 mb-2 flex items-center gap-2">
+                <span>🎯</span> Well Pad Setup
+            </h3>
+            <div class="bg-gray-800 p-3 rounded border border-gray-700 mb-4 text-sm" id="modalDepthContext">
+                To reach the critical <b>250°C</b> reaction temperature based on the local thermal gradient, the vertical wellbore must be drilled to: <br>
+                <span class="block text-2xl font-bold text-white mt-1" id="modalDepthText">-- km</span>
+            </div>
+            
+            <label class="block text-sm font-semibold text-gray-300 mb-2">Year 1 Lattice Formation (Horizontal Drilling):</label>
+            <p class="text-xs text-gray-500 mb-2">How many kilometers of lateral drilling should be performed in the source rock to increase exposed surface area?</p>
+            <div class="flex items-center gap-3 mb-6">
+                <input type="number" id="initialLatticeKm" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white text-lg focus:border-orange-500 focus:outline-none" value="1.0" min="0" step="0.1">
+                <span class="text-gray-400 font-bold">km</span>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="cancelDrill()" class="px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">Cancel</button>
+                <button onclick="confirmDrill()" class="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold shadow-lg transition-transform transform hover:-translate-y-0.5">Commence Drilling</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Dashboard (Hidden initially) -->
+    <div id="dashboard" class="absolute top-4 right-4 bottom-8 w-[420px] z-[1000] bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-xl shadow-2xl flex flex-col transition-transform transform translate-x-[120%] duration-300 ease-out pointer-events-auto">
+        
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50 rounded-t-xl shrink-0">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                🇯🇵 Japan Well Pad Simulator
+            </h2>
+            <button onclick="closeDashboard()" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+            
+            <!-- Site Context -->
+            <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 text-sm">
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Target Depth:</span>
+                    <span id="siteDepth" class="font-bold text-orange-400">-- km</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Bottom-Hole Temp:</span>
+                    <span id="siteTemp" class="font-bold text-red-400">--</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Reservoir Pressure:</span>
+                    <span id="sitePressure" class="font-bold text-blue-400">-- MPa</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Source Rock:</span>
+                    <span id="siteSource" class="font-bold truncate max-w-[200px] text-right">--</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Caprock Seal:</span>
+                    <span id="siteSeal" class="font-bold text-purple-400 truncate max-w-[200px] text-right">--</span>
+                </div>
+                <div id="siteWellAlert" class="hidden mt-2 p-2 bg-sky-900/40 border-l-2 border-sky-500 text-sky-300 text-xs rounded">
+                    <!-- Nearby well info -->
+                </div>
+            </div>
+
+            <!-- Double Tracker: CAPEX and OPEX -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <!-- CAPEX -->
+                <h3 class="text-[10px] font-bold text-orange-400 uppercase mb-1 tracking-wider border-b border-gray-700 pb-1">Capital Expenditures (CAPEX)</h3>
+                <div class="expense-row"><span>Rig & Equipment</span><span id="expEq" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Drilling Supplies (Mud/Bits)</span><span id="expSup" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Personnel & Operations</span><span id="expPer" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Travel & Lodging</span><span id="expTrv" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Contractual (Permits)</span><span id="expCon" class="expense-val">--</span></div>
+                <div class="expense-row mt-1 font-bold text-gray-200"><span>Total Initial & Intervention CAPEX</span><span id="expTotalCapex" class="expense-val text-orange-400">--</span></div>
+                <div class="text-[10px] text-gray-500 mt-1 italic text-right mb-3" id="timelineText">Active Drill Timeline: -- months</div>
+
+                <!-- OPEX -->
+                <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-wider border-b border-gray-700 pb-1">30-Year Operating Expenses (OPEX)</h3>
+                <div class="expense-row"><span>Ongoing Personnel (Ops/Maint)</span><span id="opexPer" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Injection Supplies (Water/CO₂)</span><span id="opexSup" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Contractual (Software/Leases)</span><span id="opexCon" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Travel (Site Inspections)</span><span id="opexTrv" class="expense-val">--</span></div>
+                <div class="expense-row mt-1 font-bold text-gray-200"><span>Total 30-Yr OPEX</span><span id="expTotalOpex" class="expense-val text-blue-400">--</span></div>
+                
+                <!-- TOTEX -->
+                <div class="mt-3 pt-2 border-t-2 border-gray-600 flex justify-between items-center">
+                    <span class="font-bold text-white text-sm uppercase tracking-wider">Lifetime TOTEX</span>
+                    <span id="expTotex" class="font-bold text-green-400 expense-val text-lg">--</span>
+                </div>
+            </div>
+
+            <!-- Yield KPI Grid -->
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">30-Yr Vol (STP)</span>
+                    <span id="kpiVol" class="font-bold text-base text-white">--</span>
+                </div>
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">Total Hy10 Mass</span>
+                    <span id="kpiMassHy10" class="font-bold text-base text-orange-400">--</span>
+                </div>
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">Cost per Tonne</span>
+                    <span id="kpiLCOE" class="font-bold text-base text-green-400">--</span>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-gray-800 rounded-lg p-2 border border-gray-700 h-40 relative">
+                <canvas id="yieldChart"></canvas>
+            </div>
+
+            <!-- Interventions -->
+            <div class="mt-1 pb-4">
+                <div class="flex justify-between items-end mb-3 border-b border-gray-700 pb-1">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Reservoir Interventions</h3>
+                    <span id="kpiDecay" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-600">Avg Depletion: <span class="text-orange-400 font-bold" id="decayRateVal">18.0%</span>/yr</span>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs mb-1">
+                        <label class="text-gray-300">Execution Year:</label>
+                        <span id="yearLabel" class="text-orange-400 font-bold">Year 5</span>
+                    </div>
+                    <input type="range" id="interventionYear" min="1" max="29" value="5" class="w-full" oninput="document.getElementById('yearLabel').innerText = 'Year ' + this.value">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button onclick="applyIntervention('ream')" class="bg-gray-700 border border-gray-600 hover:border-gray-400 text-white text-xs font-bold py-2 px-3 rounded flex justify-between items-center transition-colors">
+                        <span>Ream Active Bore (+5cm Ø)</span>
+                        <span class="text-gray-400 font-normal italic ml-2">Targets newest</span>
+                    </button>
+                    
+                    <div class="flex gap-2">
+                        <input type="number" id="lateralKmInput" value="1.0" min="0.1" step="0.1" class="w-20 bg-gray-800 border border-gray-600 rounded px-2 text-white text-sm focus:border-purple-500 focus:outline-none text-center" placeholder="km">
+                        <button onclick="applyIntervention('lateral')" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2 px-3 rounded transition-colors shadow">
+                            Drill New Lateral (km)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons: Export & Reset -->
+                <div class="flex gap-2 mt-4 mb-2">
+                    <button onclick="downloadReport()" class="flex-1 border border-blue-500/50 text-blue-400 hover:bg-blue-600 hover:text-white text-xs font-bold py-1.5 rounded transition-colors shadow flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export CSV
+                    </button>
+                    <button onclick="resetSimulation()" class="flex-1 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white text-xs font-bold py-1.5 rounded transition-colors shadow">
+                        Reset Well
+                    </button>
+                </div>
+
+                <div class="seismic-warning text-justify">
+                    ⚠️ <b>Induced Seismicity Risk:</b> Fluid injection in critically stressed island arc crust requires strict microseismic monitoring. Ensure injection pressures stay below the local fracturing threshold.
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATA & MAP INITIALIZATION
+        // ==========================================
+        
+        const map = L.map('map', { zoomControl: false }).setView([36.5, 137.5], 5);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+        // --- Base Layers ---
+        const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri, USGS'
+        }).addTo(map);
+
+        const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Source: Esri, i-cubed, USDA, USGS'
+        });
+
+        const esriDarkGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri'
+        }).addTo(map); // Default for better data visibility
+
+        // --- Japan Tectonic Data Sets ---
+
+        // A. Ultramafic Rocks (Source)
+        const ultramaficPolygons = [
+            { 
+                name: "Kamuikotan Tectonic Belt", 
+                state: "Serpentinized",
+                coords: [
+                    [45.45, 141.85], [45.35, 141.88], [45.20, 141.95], [45.05, 142.02], [44.90, 142.08],
+                    [44.75, 142.12], [44.60, 142.15], [44.45, 142.16], [44.30, 142.15], [44.15, 142.12],
+                    [44.00, 142.15], [43.85, 142.20], [43.70, 142.25], [43.55, 142.30], [43.40, 142.35],
+                    [43.25, 142.42], [43.10, 142.50], [42.95, 142.60], [42.80, 142.75], [42.65, 142.95],
+                    [42.50, 143.15], [42.40, 143.30], [42.35, 143.45], [42.48, 143.25], [42.65, 143.05],
+                    [42.85, 142.85], [43.05, 142.65], [43.25, 142.55], [43.45, 142.45], [43.65, 142.40],
+                    [43.85, 142.35], [44.10, 142.30], [44.35, 142.32], [44.60, 142.35], [44.85, 142.32],
+                    [45.10, 142.25], [45.30, 142.15], [45.45, 142.00], [45.45, 141.85]
+                ],
+                desc: "High-pressure metamorphic belt with massive serpentinized peridotite blocks accreted during the Cretaceous." 
+            },
+            {
+                name: "Horoman Peridotite Complex",
+                state: "Unserpentinized",
+                coords: [
+                    [42.15, 143.10], [42.14, 143.13], [42.13, 143.15], [42.11, 143.17], [42.09, 143.18],
+                    [42.07, 143.18], [42.05, 143.17], [42.03, 143.15], [42.02, 143.12], [42.01, 143.09],
+                    [42.01, 143.06], [42.02, 143.03], [42.04, 143.01], [42.06, 143.00], [42.08, 143.00],
+                    [42.10, 143.01], [42.12, 143.02], [42.14, 143.04], [42.15, 143.07], [42.16, 143.10]
+                ],
+                desc: "Exposed, exceptionally fresh (unserpentinized) lithospheric mantle slice. Highest theoretical H2 yield."
+            },
+            {
+                name: "Kurosegawa Tectonic Zone",
+                state: "Serpentinized",
+                coords: [
+                    [34.40, 134.60], [34.35, 134.50], [34.30, 134.40], [34.25, 134.25], [34.18, 134.10],
+                    [34.10, 133.95], [34.02, 133.80], [33.95, 133.65], [33.85, 133.50], [33.75, 133.35],
+                    [33.65, 133.20], [33.55, 133.05], [33.42, 132.85], [33.30, 132.65], [33.15, 132.40],
+                    [33.00, 132.15], [32.85, 131.85], [32.70, 131.55], [32.55, 131.25], [32.40, 130.95],
+                    [32.35, 130.65], [32.45, 130.50], [32.55, 130.70], [32.65, 130.95], [32.80, 131.25],
+                    [32.95, 131.55], [33.10, 131.85], [33.25, 132.10], [33.40, 132.35], [33.55, 132.65],
+                    [33.68, 132.90], [33.80, 133.15], [33.92, 133.40], [34.05, 133.65], [34.15, 133.90],
+                    [34.25, 134.15], [34.35, 134.40], [34.45, 134.65], [34.40, 134.60]
+                ],
+                desc: "Highly fault-bounded serpentinite mélange incorporating older Paleozoic basement."
+            },
+            {
+                name: "Sangun Metamorphic Belt",
+                state: "Serpentinized",
+                coords: [
+                    [35.80, 134.80], [35.75, 134.65], [35.68, 134.50], [35.60, 134.35], [35.52, 134.20],
+                    [35.45, 134.05], [35.35, 133.85], [35.25, 133.65], [35.15, 133.45], [35.05, 133.25],
+                    [34.92, 133.05], [34.80, 132.80], [34.65, 132.55], [34.50, 132.30], [34.35, 132.05],
+                    [34.20, 131.80], [34.08, 131.55], [33.98, 131.30], [33.90, 131.05], [33.85, 130.85],
+                    [33.95, 130.80], [34.05, 131.05], [34.15, 131.30], [34.28, 131.55], [34.42, 131.80],
+                    [34.58, 132.10], [34.75, 132.40], [34.90, 132.70], [35.05, 133.00], [35.20, 133.30],
+                    [35.35, 133.60], [35.50, 133.90], [35.65, 134.20], [35.78, 134.50], [35.88, 134.75],
+                    [35.80, 134.80]
+                ],
+                desc: "Inner zone of Southwest Japan; features serpentinite bodies intruded along major shear zones."
+            },
+            {
+                name: "Tari-Misaka Ultramafic Complex",
+                state: "Unserpentinized",
+                coords: [
+                    [35.19, 133.15], [35.18, 133.17], [35.16, 133.19], [35.14, 133.20], [35.12, 133.21],
+                    [35.09, 133.20], [35.07, 133.18], [35.05, 133.15], [35.04, 133.12], [35.05, 133.09],
+                    [35.07, 133.06], [35.09, 133.04], [35.12, 133.05], [35.14, 133.07], [35.16, 133.09],
+                    [35.18, 133.12], [35.19, 133.15]
+                ],
+                desc: "Chugoku region complex containing significant fresh dunite and harzburgite blocks."
+            },
+            {
+                name: "Mineoka Ophiolite",
+                state: "Serpentinized",
+                coords: [
+                    [35.17, 140.05], [35.16, 140.08], [35.14, 140.12], [35.12, 140.16], [35.09, 140.19],
+                    [35.06, 140.21], [35.03, 140.22], [35.00, 140.20], [34.98, 140.16], [34.97, 140.12],
+                    [34.97, 140.08], [34.98, 140.04], [34.99, 140.00], [35.01, 139.96], [35.03, 139.92],
+                    [35.06, 139.88], [35.09, 139.86], [35.12, 139.85], [35.15, 139.87], [35.17, 139.91],
+                    [35.18, 139.96], [35.18, 140.01], [35.17, 140.05]
+                ],
+                desc: "Cenozoic ophiolite complex obducted at the triple junction."
+            }
+        ];
+
+        // B. Neogene Mudstones
+        const mudstoneBasins = [
+            { 
+                name: "Niigata-Akita Basin", 
+                coords: [
+                    [40.8, 140.2], [40.4, 139.9], [40.0, 139.8], [39.6, 139.8], 
+                    [39.2, 139.7], [38.8, 139.5], [38.3, 139.2], [37.8, 138.6], 
+                    [37.4, 138.3], [37.0, 137.9], [36.8, 137.5], [37.0, 137.9], 
+                    [37.4, 138.6], [37.8, 139.0], [38.3, 139.6], [38.8, 140.0], 
+                    [39.2, 140.2], [39.6, 140.2], [40.0, 140.3], [40.4, 140.4], [40.8, 140.5]
+                ],
+                desc: "Extremely thick (>5km) Neogene marine mudstones. Source/seal for conventional O&G." 
+            },
+            { 
+                name: "Kanto Deep Basin", 
+                coords: [[36.5, 139.0], [35.5, 139.0], [35.2, 139.5], [35.2, 140.5], [36.0, 140.6], [36.5, 140.0]],
+                desc: "Subsiding fore-arc basin filled with thick Pleistocene to Neogene sediments." 
+            },
+            {
+                name: "Tenpoku-Urakawa Basin",
+                coords: [[45.5, 141.5], [44.5, 141.5], [43.5, 141.8], [42.5, 142.2], [42.8, 142.8], [44.0, 142.2], [45.5, 142.2]],
+                desc: "Thick Cretaceous to Neogene sedimentary sequences acting as a caprock."
+            }
+        ];
+
+        // C. Accretionary Prism / Metamorphic Seals
+        const accretionaryPrisms = [
+            { 
+                name: "Shimanto Belt", 
+                coords: [
+                    [35.45, 138.60], [35.25, 138.40], [35.05, 138.15], [34.85, 137.90], [34.65, 137.60], 
+                    [34.45, 137.30], [34.25, 136.95], [34.05, 136.55], [33.85, 136.15], [33.65, 135.75], 
+                    [33.45, 135.35], [33.25, 134.90], [33.10, 134.45], [32.95, 134.00], [32.80, 133.55], 
+                    [32.65, 133.10], [32.50, 132.65], [32.30, 132.20], [32.10, 131.75], [31.90, 131.35], 
+                    [31.70, 130.95], [31.50, 130.60], [31.25, 130.55], [31.40, 130.95], [31.60, 131.35], 
+                    [31.85, 131.80], [32.10, 132.25], [32.35, 132.70], [32.60, 133.20], [32.85, 133.70], 
+                    [33.10, 134.20], [33.35, 134.70], [33.60, 135.20], [33.85, 135.75], [34.15, 136.30], 
+                    [34.45, 136.90], [34.75, 137.50], [35.05, 138.15], [35.35, 138.80], [35.45, 138.60]
+                ],
+                desc: "Vast Cretaceous-Paleogene accretionary complex. Acts as a massive, indurated regional seal."
+            }
+        ];
+
+        // D. Thermal Gradients (GSJ/AIST Heat Flow Data)
+        const heatContours = [
+            {
+                coords: [
+                    [45.60, 141.20], [45.40, 141.30], [45.10, 141.45], [44.80, 141.50], [44.50, 141.60], [44.20, 141.65],
+                    [43.90, 141.60], [43.60, 141.45], [43.30, 141.25], [43.00, 140.95], [42.70, 140.55], [42.45, 140.20],
+                    [42.20, 140.00], [41.90, 139.80], [41.60, 139.60], [41.30, 139.45], [41.00, 139.35], [40.70, 139.25],
+                    [40.40, 139.10], [40.10, 138.90], [39.80, 138.70], [39.50, 138.50], [39.20, 138.30], [38.90, 138.10],
+                    [38.60, 137.90], [38.30, 137.70], [38.00, 137.40], [37.70, 137.00], [37.40, 136.60], [37.10, 136.10],
+                    [36.80, 135.60], [36.50, 135.10], [36.20, 134.60], [35.90, 134.20], [35.60, 133.70], [35.30, 133.10],
+                    [35.00, 132.50], [34.70, 131.80], [34.45, 131.20], [34.20, 130.60], [33.95, 129.90], [33.75, 129.30],
+                    [33.55, 128.80], [33.80, 128.85], [34.10, 129.00], [34.40, 129.25], [34.70, 129.50], [35.00, 129.80],
+                    [35.30, 130.20], [35.60, 130.60], [35.90, 131.10], [36.20, 131.70], [36.50, 132.30], [36.80, 133.00],
+                    [37.10, 133.70], [37.40, 134.50], [37.70, 135.30], [38.00, 136.10], [38.30, 136.90], [38.60, 137.60],
+                    [38.90, 138.20], [39.20, 138.70], [39.50, 139.10], [39.80, 139.45], [40.10, 139.75], [40.40, 140.00],
+                    [40.70, 140.20], [41.00, 140.35], [41.30, 140.45], [41.60, 140.60], [41.90, 140.75], [42.20, 140.90],
+                    [42.50, 141.10], [42.80, 141.30], [43.10, 141.50], [43.40, 141.70], [43.70, 141.90], [44.00, 142.10],
+                    [44.30, 142.25], [44.60, 142.40], [44.90, 142.50], [45.20, 142.55], [45.50, 142.50], [45.70, 142.30],
+                    [45.80, 142.00], [45.75, 141.60], [45.60, 141.20]
+                ],
+                val: 80, gradient: 35, desc: "Sea of Japan Back-Arc Extension Zone"
+            },
+            {
+                coords: [
+                    [41.60, 141.40], [41.45, 141.25], [41.30, 141.10], [41.15, 140.95], [41.00, 140.80], [40.85, 140.68],
+                    [40.70, 140.60], [40.55, 140.55], [40.40, 140.50], [40.25, 140.48], [40.10, 140.45], [39.95, 140.40],
+                    [39.80, 140.35], [39.65, 140.30], [39.50, 140.25], [39.35, 140.20], [39.20, 140.15], [39.05, 140.10],
+                    [38.90, 140.05], [38.75, 140.00], [38.60, 139.95], [38.45, 139.85], [38.30, 139.75], [38.15, 139.65],
+                    [38.00, 139.55], [37.85, 139.45], [37.70, 139.35], [37.55, 139.20], [37.40, 139.10], [37.25, 139.00],
+                    [37.10, 138.95], [36.95, 138.95], [36.80, 139.00], [36.75, 139.15], [36.85, 139.30], [36.95, 139.45],
+                    [37.10, 139.60], [37.25, 139.80], [37.40, 140.00], [37.55, 140.20], [37.70, 140.35], [37.85, 140.50],
+                    [38.00, 140.60], [38.15, 140.70], [38.30, 140.80], [38.45, 140.85], [38.60, 140.90], [38.75, 140.95],
+                    [38.90, 141.00], [39.05, 141.05], [39.20, 141.10], [39.35, 141.15], [39.50, 141.20], [39.65, 141.25],
+                    [39.80, 141.30], [39.95, 141.35], [40.10, 141.40], [40.25, 141.45], [40.40, 141.50], [40.55, 141.55],
+                    [40.70, 141.60], [40.85, 141.65], [41.00, 141.70], [41.15, 141.75], [41.30, 141.70], [41.45, 141.60],
+                    [41.55, 141.50], [41.60, 141.40]
+                ], 
+                val: 100, gradient: 50, desc: "Tohoku Quaternary Volcanic Front"
+            },
+            {
+                coords: [
+                    [44.60, 144.60], [44.45, 144.30], [44.30, 143.95], [44.15, 143.60], [44.00, 143.25], [43.85, 142.90],
+                    [43.70, 142.60], [43.55, 142.30], [43.40, 142.00], [43.25, 141.70], [43.10, 141.40], [42.95, 141.15],
+                    [42.80, 140.90], [42.65, 140.65], [42.50, 140.40], [42.35, 140.15], [42.20, 139.95], [42.05, 139.75],
+                    [41.90, 139.65], [41.75, 139.55], [41.60, 139.50], [41.45, 139.55], [41.35, 139.70], [41.45, 139.90],
+                    [41.55, 140.10], [41.65, 140.30], [41.75, 140.50], [41.85, 140.70], [42.00, 140.90], [42.15, 141.15],
+                    [42.30, 141.40], [42.45, 141.65], [42.60, 141.90], [42.75, 142.20], [42.90, 142.50], [43.05, 142.80],
+                    [43.20, 143.15], [43.35, 143.50], [43.50, 143.85], [43.65, 144.15], [43.80, 144.45], [43.95, 144.75],
+                    [44.10, 145.00], [44.25, 145.20], [44.40, 145.30], [44.55, 145.35], [44.65, 145.20], [44.70, 145.00],
+                    [44.65, 144.80], [44.60, 144.60]
+                ], 
+                val: 100, gradient: 50, desc: "Hokkaido Quaternary Volcanic Front"
+            },
+            {
+                coords: [
+                    [37.05, 138.80], [36.95, 138.60], [36.85, 138.40], [36.75, 138.25], [36.65, 138.10], [36.55, 137.95],
+                    [36.45, 137.80], [36.35, 137.65], [36.25, 137.55], [36.15, 137.45], [36.05, 137.35], [35.95, 137.30],
+                    [35.85, 137.25], [35.75, 137.25], [35.65, 137.28], [35.55, 137.32], [35.50, 137.40], [35.50, 137.50],
+                    [35.55, 137.60], [35.65, 137.75], [35.75, 137.90], [35.85, 138.05], [35.95, 138.20], [36.05, 138.35],
+                    [36.15, 138.50], [36.25, 138.65], [36.35, 138.80], [36.45, 138.90], [36.55, 139.00], [36.65, 139.10],
+                    [36.75, 139.15], [36.85, 139.20], [36.95, 139.20], [37.05, 139.15], [37.10, 139.05], [37.10, 138.95],
+                    [37.05, 138.80]
+                ], 
+                val: 100, gradient: 55, desc: "Hida / Northern Alps Volcanic Zone"
+            },
+            {
+                coords: [
+                    [34.20, 132.00], [34.05, 131.75], [33.90, 131.50], [33.75, 131.25], [33.60, 131.05], [33.45, 130.85],
+                    [33.30, 130.65], [33.15, 130.45], [33.00, 130.30], [32.85, 130.15], [32.70, 130.00], [32.55, 129.85],
+                    [32.40, 129.75], [32.25, 129.65], [32.10, 129.55], [31.95, 129.45], [31.80, 129.35], [31.65, 129.30],
+                    [31.50, 129.25], [31.35, 129.20], [31.20, 129.20], [31.10, 129.30], [31.10, 129.45], [31.20, 129.60],
+                    [31.30, 129.75], [31.40, 129.90], [31.50, 130.05], [31.65, 130.25], [31.80, 130.45], [31.95, 130.65],
+                    [32.10, 130.85], [32.25, 131.05], [32.40, 131.25], [32.55, 131.40], [32.70, 131.55], [32.85, 131.70],
+                    [33.00, 131.85], [33.15, 132.00], [33.30, 132.15], [33.45, 132.30], [33.60, 132.45], [33.75, 132.60],
+                    [33.90, 132.70], [34.05, 132.75], [34.20, 132.75], [34.30, 132.60], [34.35, 132.40], [34.30, 132.20],
+                    [34.20, 132.00]
+                ], 
+                val: 100, gradient: 60, desc: "Kyushu Volcanic Arc (Graben)"
+            },
+            {
+                coords: [ 
+                    [40.20, 140.85], [40.16, 140.78], [40.12, 140.70], [40.08, 140.64], [40.04, 140.58], [40.00, 140.54],
+                    [39.96, 140.50], [39.92, 140.48], [39.88, 140.46], [39.84, 140.45], [39.80, 140.46], [39.76, 140.48],
+                    [39.72, 140.50], [39.68, 140.54], [39.64, 140.58], [39.60, 140.64], [39.56, 140.70], [39.52, 140.78],
+                    [39.50, 140.85], [39.50, 140.92], [39.52, 141.00], [39.56, 141.06], [39.60, 141.12], [39.64, 141.16],
+                    [39.68, 141.20], [39.72, 141.22], [39.76, 141.24], [39.80, 141.25], [39.84, 141.24], [39.88, 141.22],
+                    [39.92, 141.20], [39.96, 141.16], [40.00, 141.12], [40.04, 141.06], [40.08, 141.00], [40.12, 140.92],
+                    [40.16, 140.85], [40.20, 140.85]
+                ], 
+                val: 150, gradient: 100, desc: "Hachimantai / Sengan Geothermal Region"
+            },
+            {
+                coords: [ 
+                    [39.10, 140.75], [39.06, 140.68], [39.02, 140.60], [38.98, 140.54], [38.94, 140.48], [38.90, 140.44],
+                    [38.86, 140.40], [38.82, 140.38], [38.78, 140.36], [38.74, 140.35], [38.70, 140.36], [38.66, 140.38],
+                    [38.62, 140.40], [38.58, 140.44], [38.54, 140.48], [38.50, 140.54], [38.46, 140.60], [38.42, 140.68],
+                    [38.40, 140.75], [38.40, 140.82], [38.42, 140.90], [38.46, 140.96], [38.50, 141.02], [38.54, 141.06],
+                    [38.58, 141.10], [38.62, 141.12], [38.66, 141.14], [38.70, 141.15], [38.74, 141.14], [38.78, 141.12],
+                    [38.82, 141.10], [38.86, 141.06], [38.90, 141.02], [38.94, 140.96], [38.98, 140.90], [39.02, 140.82],
+                    [39.06, 140.75], [39.10, 140.75]
+                ], 
+                val: 150, gradient: 90, desc: "Onikobe Caldera Area"
+            },
+            {
+                coords: [ 
+                    [33.50, 131.65], [33.46, 131.58], [33.42, 131.50], [33.38, 131.42], [33.34, 131.34], [33.30, 131.26],
+                    [33.26, 131.18], [33.22, 131.10], [33.18, 131.02], [33.14, 130.94], [33.10, 130.86], [33.06, 130.80],
+                    [33.02, 130.74], [32.98, 130.70], [32.94, 130.68], [32.90, 130.68], [32.86, 130.70], [32.82, 130.74],
+                    [32.78, 130.80], [32.74, 130.86], [32.72, 130.94], [32.72, 131.02], [32.74, 131.10], [32.78, 131.18],
+                    [32.82, 131.26], [32.86, 131.34], [32.90, 131.42], [32.94, 131.50], [32.98, 131.58], [33.02, 131.65],
+                    [33.06, 131.72], [33.10, 131.78], [33.14, 131.84], [33.18, 131.88], [33.22, 131.90], [33.26, 131.92],
+                    [33.30, 131.92], [33.34, 131.90], [33.38, 131.88], [33.42, 131.84], [33.46, 131.78], [33.50, 131.72],
+                    [33.52, 131.65], [33.50, 131.65]
+                ], 
+                val: 150, gradient: 110, desc: "Aso / Kuju / Beppu Volcanic Complex"
+            },
+            {
+                coords: [ 
+                    [43.90, 142.95], [43.86, 142.88], [43.82, 142.80], [43.78, 142.74], [43.74, 142.68], [43.70, 142.64],
+                    [43.66, 142.60], [43.62, 142.58], [43.58, 142.56], [43.54, 142.55], [43.50, 142.56], [43.46, 142.58],
+                    [43.42, 142.60], [43.38, 142.64], [43.34, 142.68], [43.30, 142.74], [43.26, 142.80], [43.22, 142.88],
+                    [43.20, 142.95], [43.20, 143.02], [43.22, 143.10], [43.26, 143.16], [43.30, 143.22], [43.34, 143.26],
+                    [43.38, 143.30], [43.42, 143.32], [43.46, 143.34], [43.50, 143.35], [43.54, 143.34], [43.58, 143.32],
+                    [43.62, 143.30], [43.66, 143.26], [43.70, 143.22], [43.74, 143.16], [43.78, 143.10], [43.82, 143.02],
+                    [43.86, 142.95], [43.90, 142.95]
+                ], 
+                val: 150, gradient: 85, desc: "Taisetsu Volcanic Group"
+            },
+            {
+                coords: [ 
+                    [44.20, 144.45], [44.16, 144.38], [44.12, 144.30], [44.08, 144.24], [44.04, 144.18], [44.00, 144.14],
+                    [43.96, 144.10], [43.92, 144.08], [43.88, 144.06], [43.84, 144.05], [43.80, 144.06], [43.76, 144.08],
+                    [43.72, 144.10], [43.68, 144.14], [43.64, 144.18], [43.60, 144.24], [43.56, 144.30], [43.52, 144.38],
+                    [43.50, 144.45], [43.50, 144.52], [43.52, 144.60], [43.56, 144.66], [43.60, 144.72], [43.64, 144.76],
+                    [43.68, 144.80], [43.72, 144.82], [43.76, 144.84], [43.80, 144.85], [43.84, 144.84], [43.88, 144.82],
+                    [43.92, 144.80], [43.96, 144.76], [44.00, 144.72], [44.04, 144.66], [44.08, 144.60], [44.12, 144.52],
+                    [44.16, 144.45], [44.20, 144.45]
+                ], 
+                val: 150, gradient: 90, desc: "Akan-Shiretoko Volcanic Chain"
+            },
+            {
+                coords: [ 
+                    [43.00, 141.55], [42.96, 141.48], [42.92, 141.40], [42.88, 141.34], [42.84, 141.28], [42.80, 141.24],
+                    [42.76, 141.20], [42.72, 141.18], [42.68, 141.16], [42.64, 141.15], [42.60, 141.16], [42.56, 141.18],
+                    [42.52, 141.20], [42.48, 141.24], [42.44, 141.28], [42.40, 141.34], [42.36, 141.40], [42.32, 141.48],
+                    [42.30, 141.55], [42.30, 141.62], [42.32, 141.70], [42.36, 141.76], [42.40, 141.82], [42.44, 141.86],
+                    [42.48, 141.90], [42.52, 141.92], [42.56, 141.94], [42.60, 141.95], [42.64, 141.94], [42.68, 141.92],
+                    [42.72, 141.90], [42.76, 141.86], [42.80, 141.82], [42.84, 141.76], [42.88, 141.70], [42.92, 141.62],
+                    [42.96, 141.55], [43.00, 141.55]
+                ], 
+                val: 150, gradient: 95, desc: "Shikotsu-Toya Caldera Region"
+            },
+            {
+                coords: [ 
+                    [35.45, 139.05], [35.41, 138.98], [35.37, 138.90], [35.33, 138.84], [35.29, 138.78], [35.25, 138.74],
+                    [35.21, 138.70], [35.17, 138.68], [35.13, 138.66], [35.09, 138.65], [35.05, 138.66], [35.01, 138.68],
+                    [34.97, 138.70], [34.93, 138.74], [34.89, 138.78], [34.85, 138.84], [34.81, 138.90], [34.77, 138.98],
+                    [34.75, 139.05], [34.75, 139.12], [34.77, 139.20], [34.81, 139.26], [34.85, 139.32], [34.89, 139.36],
+                    [34.93, 139.40], [34.97, 139.42], [35.01, 139.44], [35.05, 139.45], [35.09, 139.44], [35.13, 139.42],
+                    [35.17, 139.40], [35.21, 139.36], [35.25, 139.32], [35.29, 139.26], [35.33, 139.20], [35.37, 139.12],
+                    [35.41, 139.05], [35.45, 139.05]
+                ], 
+                val: 150, gradient: 95, desc: "Izu Peninsula / Hakone Geothermal System"
+            }
+        ];
+        
+        // E. Fault Lines
+        const faultData = [
+            {
+                name: "Median Tectonic Line (MTL)",
+                path: [[34.8, 136.5], [34.5, 135.8], [34.2, 135.0], [33.8, 134.0], [33.6, 133.5], [33.5, 133.0], [33.2, 132.2], [33.0, 131.5], [32.5, 130.5]],
+                type: "transmissive",
+                desc: "Japan's longest fault system. Massive strike-slip boundary potentially acting as a deep crustal fluid conduit."
+            },
+            {
+                name: "Itoigawa-Shizuoka Tectonic Line (ISTL)",
+                path: [[37.0, 137.8], [36.0, 137.9], [35.5, 138.3], [35.0, 138.2]],
+                type: "sealed",
+                desc: "Major structural boundary separating Northeast and Southwest Japan. Often acts as a structural barrier."
+            },
+            {
+                name: "Futaba Fault",
+                path: [[38.5, 140.8], [37.5, 140.5], [36.8, 140.5]],
+                type: "sealed",
+                desc: "Reverse fault system running along the eastern edge of the Abukuma mountains."
+            }
+        ];
+
+        // F. Existing Geothermal Wells
+        const geothermalWells = [
+            { name: "Hatchobaru Geothermal Plant", lat: 33.104, lng: 131.187, depth: 2.5, desc: "Japan's largest geothermal plant. Multi-phase fluid reservoir." },
+            { name: "Kakkonda Geothermal Plant", lat: 39.829, lng: 140.856, depth: 3.7, desc: "World-famous deep well (WD-1a) reached >500°C at 3,729m penetrating granite." },
+            { name: "Matsukawa Geothermal Plant", lat: 39.873, lng: 140.916, depth: 1.5, desc: "First commercial geothermal plant in Japan (vapor-dominated)." },
+            { name: "Yanaizu-Nishiyama", lat: 37.472, lng: 139.691, depth: 2.0, desc: "Deep fracture-controlled geothermal system in Fukushima." },
+            { name: "Mori Geothermal Plant", lat: 42.118, lng: 140.540, depth: 2.4, desc: "Caldera-based system in Hokkaido." },
+            { name: "Wasabizawa Geothermal Plant", lat: 38.966, lng: 140.552, depth: 2.0, desc: "Recently commissioned deep geothermal well system in Akita." }
+        ];
+
+        // Map Layers Rendering
+        const ultramaficLayer = L.layerGroup().addTo(map);
+        ultramaficPolygons.forEach(site => { L.polygon(site.coords, { fillColor: "#ea580c", color: "#c2410c", weight: 2, fillOpacity: 0.7, interactive: false }).addTo(ultramaficLayer); });
+
+        const mudstoneLayer = L.layerGroup().addTo(map);
+        mudstoneBasins.forEach(basin => { L.polygon(basin.coords, { fillColor: "#9333ea", color: "#7e22ce", weight: 1, fillOpacity: 0.4, interactive: false }).addTo(mudstoneLayer); });
+
+        const accretionLayer = L.layerGroup().addTo(map);
+        accretionaryPrisms.forEach(basin => { L.polygon(basin.coords, { fillColor: "#4b5563", color: "#374151", weight: 1, fillOpacity: 0.5, interactive: false }).addTo(accretionLayer); });
+
+        const heatLayer = L.layerGroup().addTo(map);
+        heatContours.sort((a, b) => a.val - b.val).forEach(zone => {
+            let color = zone.val >= 100 ? "#7f1d1d" : (zone.val >= 80 ? "#dc2626" : "#f97316");
+            let op = zone.val >= 100 ? 0.7 : (zone.val >= 80 ? 0.5 : 0.2);
+            L.polygon(zone.coords, { fillColor: color, color: "transparent", fillOpacity: op, interactive: false }).addTo(heatLayer);
+        });
+
+        const faultLayer = L.layerGroup().addTo(map);
+        faultData.forEach(fault => {
+            const isTransmissive = fault.type === 'transmissive';
+            L.polyline(fault.path, {
+                color: isTransmissive ? '#facc15' : '#ffffff',
+                weight: isTransmissive ? 3 : 4,
+                opacity: 0.9,
+                dashArray: isTransmissive ? '10, 10' : null
+            }).on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                L.popup().setLatLng(e.latlng).setContent(`<b>${fault.name}</b><br>Type: ${isTransmissive ? 'Transmissive (Conduit)' : 'Sealed (Trap)'}<br>${fault.desc}`).openOn(map);
+            }).addTo(faultLayer);
+        });
+
+        const wellsLayer = L.layerGroup().addTo(map);
+        geothermalWells.forEach(well => {
+            L.circleMarker([well.lat, well.lng], {
+                radius: 6, fillColor: "#0ea5e9", color: "#0284c7", weight: 2, opacity: 1, fillOpacity: 0.8
+            }).on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                L.popup().setLatLng(e.latlng).setContent(`<b>🏭 ${well.name}</b><br><b>Current Well Depth:</b> ${well.depth} km<br><i>${well.desc}</i>`).openOn(map);
+            }).addTo(wellsLayer);
+        });
+
+        // Layer Control & Legend
+        L.control.layers(
+            { "Topographic (Terrain)": esriTopo, "Satellite Imagery": esriImagery, "Dark Gray Canvas": esriDarkGray },
+            { 
+                "<span style='color:#ea580c'>■</span> Accreted Ophiolites (Source)": ultramaficLayer, 
+                "<span>🔥</span> Arc Thermal Provinces": heatLayer, 
+                "<span style='color:#9333ea'>■</span> Neogene Mudstone (Seal)": mudstoneLayer, 
+                "<span style='color:#4b5563'>■</span> Accretionary Prism (Seal)": accretionLayer, 
+                "<span>⚡</span> Tectonic Boundaries": faultLayer, 
+                "<span>📍</span> Existing Geothermal Wells": wellsLayer 
+            },
+            { collapsed: false }
+        ).addTo(map);
+
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML += '<h4>Island Arc Geology</h4>';
+            div.innerHTML += '<i style="background: #ea580c; border: 1px solid #c2410c"></i> Accreted Ultramafic<br>';
+            div.innerHTML += '<i class="well-icon"></i> Geothermal Well<br>';
+            div.innerHTML += '<div style="margin-top:5px; margin-bottom:5px; border-top:1px solid #4b5563;"></div>';
+            div.innerHTML += '<strong>Geothermal Gradient (GSJ Data)</strong><br>';
+            div.innerHTML += '<i style="background: #7f1d1d; opacity: 0.7"></i> High-Enthalpy Geothermal (>150 mW/m²)<br>';
+            div.innerHTML += '<i style="background: #dc2626; opacity: 0.5"></i> Quaternary Volcanic Arc (>100 mW/m²)<br>';
+            div.innerHTML += '<i style="background: #f97316; opacity: 0.2"></i> Back-Arc Extension (>80 mW/m²)<br>';
+            div.innerHTML += '<div style="margin-top:5px; margin-bottom:5px; border-top:1px solid #4b5563;"></div>';
+            div.innerHTML += '<i style="background: #9333ea; opacity: 0.5"></i> Neogene Mudstone Basin<br>';
+            div.innerHTML += '<i style="background: #4b5563; opacity: 0.5"></i> Accretionary Shale Prism<br>';
+            div.innerHTML += '<div style="margin-top:5px; margin-bottom:5px; border-top:1px solid #4b5563;"></div>';
+            div.innerHTML += '<i class="line-dashed"></i> Transmissive Fault Line<br>';
+            div.innerHTML += '<i class="line-solid"></i> Sealed Fault Line<br>';
+            return div;
+        };
+        legend.addTo(map);
+
+        // ==========================================
+        // 2. STATE & COST PHYSICS ENGINE
+        // ==========================================
+
+        let marker = null;
+        let chartInstance = null;
+        
+        // Active Well State
+        let currentMultiplier = 1.0;
+        
+        const SIM_YEARS = 30;
+        const BORE_DIAMETER_M = 0.216; // 8.5" Initial
+        const MAX_BORE_DIAMETER_M = 0.450; // ~17.7" Hard limit for reaming
+        const BASE_RATE_STP = 1.0; // m3/hr per 100m2 (Adjusted for Japan complexity)
+        const BASE_DECAY_K = 0.18; // Base depletion factor for 8.5" well
+
+        let segments = [];
+        let interventionsLog = [];
+
+        // CAPEX Calculation (Adjusted for Japan tectonic stress: $5.5M/km equivalent)
+        function calculateCAPEX(lengthKm, isVertical) {
+            let months = lengthKm * 2.0; // Slower drilling in hard arc rock
+            let personnelCost = months * 25000;
+            let travelCost = months * 5000;
+            
+            // Scaled equipment and supplies to hit ~$5.5M/km total
+            let equipmentCost = isVertical ? 1800000 : 150000;
+            let suppliesCost = lengthKm * 3200000; // Expensive muds and bits for hard rock
+            let contractualCost = isVertical ? 350000 : 50000;
+            
+            return {
+                personnel: personnelCost, travel: travelCost, equipment: equipmentCost, supplies: suppliesCost, contractual: contractualCost,
+                total: personnelCost + travelCost + equipmentCost + suppliesCost + contractualCost,
+                months: months
+            };
+        }
+
+        // OPEX Calculation (Annual Operations)
+        function calculateAnnualOPEX(activeKm) {
+            let personnel = 200000 + (35000 * activeKm); 
+            let supplies = 180000 * activeKm; // Water/CO2 injection
+            let travel = 50000; 
+            let contractual = 80000; 
+            return { personnel, supplies, travel, contractual, total: personnel + supplies + travel + contractual };
+        }
+
+        function isPointInPoly(lat, lng, polygonCoords) {
+            var x = lat, y = lng, inside = false;
+            for (var i = 0, j = polygonCoords.length - 1; i < polygonCoords.length; j = i++) {
+                var xi = polygonCoords[i][0], yi = polygonCoords[i][1];
+                var xj = polygonCoords[j][0], yj = polygonCoords[j][1];
+                var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // ==========================================
+        // 3. UI INTERACTIONS
+        // ==========================================
+
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            if(marker) map.removeLayer(marker);
+            marker = L.circleMarker([lat, lng], { radius: 6, fillColor: "#fff", color: "#000", weight: 2, fillOpacity: 1 }).addTo(map);
+
+            window.activeSite = { lat, lng };
+            window.activeSite.foundSource = ultramaficPolygons.find(p => isPointInPoly(lat, lng, p.coords));
+            window.activeSite.foundMudstone = mudstoneBasins.find(p => isPointInPoly(lat, lng, p.coords));
+            window.activeSite.foundAccretionary = accretionaryPrisms.find(p => isPointInPoly(lat, lng, p.coords));
+            window.activeSite.nearbyWell = geothermalWells.find(w => Math.abs(w.lat - lat) < 0.15 && Math.abs(w.lng - lng) < 0.15);
+            
+            // Default Cold Fore-Arc
+            let foundHeat = { val: 40, gradient: 20, desc: "Cold Fore-arc / Trench Background" };
+            heatContours.forEach(zone => { if(isPointInPoly(lat, lng, zone.coords)) foundHeat = zone; });
+            window.activeSite.foundHeat = foundHeat;
+
+            let gradient = foundHeat.gradient;
+            let targetTemp = 250;
+            let surfaceTemp = 15;
+            let idealDepthKm = (targetTemp - surfaceTemp) / gradient;
+            
+            // Japan strict depth cap
+            const MAX_DRILL_DEPTH_KM = 6.0;
+            let depthKm = idealDepthKm;
+            let actualTemp = targetTemp;
+
+            if (depthKm > MAX_DRILL_DEPTH_KM) {
+                depthKm = MAX_DRILL_DEPTH_KM;
+                actualTemp = surfaceTemp + (depthKm * gradient);
+            }
+
+            window.activeSite.depthKm = depthKm;
+            window.activeSite.actualTemp = actualTemp;
+
+            // Multipliers
+            let freshMultiplier = window.activeSite.foundSource ? (window.activeSite.foundSource.state === "Unserpentinized" ? 2.5 : 1.0) : 0.03;
+            let tempMultiplier = actualTemp < targetTemp ? Math.max(0.05, (actualTemp - 100) / (targetTemp - 100)) : 1.0;
+            let heatMultiplier = foundHeat.val / 65.0;
+            window.activeSite.multiplier = freshMultiplier * heatMultiplier * tempMultiplier;
+
+            document.getElementById('modalDepthText').innerText = depthKm.toFixed(2) + " km";
+            
+            if (actualTemp < targetTemp) {
+                document.getElementById('modalDepthContext').innerHTML = `
+                    <span class="text-red-400"><b>⚠️ Cold Fore-arc Region:</b></span> Maximum drillable depth (6.0km) cannot reach the optimal 250°C reaction temp. <br>
+                    <div class="flex justify-between items-center mt-2 border-t border-gray-600 pt-2">
+                        <span>Max Depth Limit:</span><span class="text-xl font-bold text-white">${MAX_DRILL_DEPTH_KM.toFixed(2)} km</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span>Bottom-Hole Temp:</span><span class="text-xl font-bold text-red-400">${actualTemp.toFixed(0)} °C</span>
+                    </div>
+                `;
+            } else {
+                document.getElementById('modalDepthContext').innerHTML = `
+                    To reach the critical <b>250°C</b> reaction temperature based on the local thermal gradient (${gradient}°C/km), the vertical wellbore must be drilled to: <br>
+                    <span class="block text-2xl font-bold text-white mt-1">${depthKm.toFixed(2)} km</span>
+                `;
+            }
+
+            document.getElementById('drillModal').classList.remove('hidden');
+        });
+
+        function cancelDrill() {
+            document.getElementById('drillModal').classList.add('hidden');
+            if(marker) map.removeLayer(marker);
+        }
+
+        function confirmDrill() {
+            document.getElementById('drillModal').classList.add('hidden');
+            let initialLattice = parseFloat(document.getElementById('initialLatticeKm').value) || 0;
+            
+            let siteDepthKm = window.activeSite.depthKm;
+            currentMultiplier = window.activeSite.multiplier;
+
+            document.getElementById('siteDepth').innerText = siteDepthKm.toFixed(2) + " km";
+            document.getElementById('siteTemp').innerText = window.activeSite.actualTemp.toFixed(0) + " °C";
+            document.getElementById('siteTemp').className = window.activeSite.actualTemp < 200 ? "font-bold text-red-400" : "font-bold text-green-400";
+            
+            let pressureMPa = siteDepthKm * 11; // Overpressure in arc
+            document.getElementById('sitePressure').innerText = pressureMPa.toFixed(0) + " MPa";
+            
+            let source = window.activeSite.foundSource;
+            document.getElementById('siteSource').innerText = source ? source.name + (source.state ? ` (${source.state})` : '') : "Non-Ultramafic Basement";
+            document.getElementById('siteSource').className = source ? "font-bold text-orange-400 truncate max-w-[200px] text-right" : "font-bold text-gray-500 truncate max-w-[200px] text-right";
+            
+            let mud = window.activeSite.foundMudstone;
+            let acc = window.activeSite.foundAccretionary;
+            let sealStr = mud ? mud.name : (acc ? acc.name : "None Detected (Leak Risk)");
+            document.getElementById('siteSeal').innerText = sealStr;
+            document.getElementById('siteSeal').className = mud || acc ? "font-bold text-purple-400 truncate max-w-[200px] text-right" : "font-bold text-red-500 truncate max-w-[200px] text-right";
+
+            let well = window.activeSite.nearbyWell;
+            let alertBox = document.getElementById('siteWellAlert');
+            if (well) {
+                alertBox.innerHTML = `<b>Nearby Geothermal:</b> ${well.name} (${well.depth}km)`;
+                alertBox.classList.remove('hidden');
+            } else {
+                alertBox.classList.add('hidden');
+            }
+
+            segments = [];
+            interventionsLog = [];
+            
+            // Initial CAPEX (Vertical + Lattice)
+            segments.push({
+                id: 'Vertical Bore', drilledYear: 0, lengthKm: siteDepthKm, isVertical: true, activeYieldKm: 0.1, 
+                diameterM: BORE_DIAMETER_M, costs: calculateCAPEX(siteDepthKm, true)
+            });
+
+            if (initialLattice > 0) {
+                segments.push({
+                    id: 'Initial Lattice', drilledYear: 0, lengthKm: initialLattice, isVertical: false, activeYieldKm: initialLattice,
+                    diameterM: BORE_DIAMETER_M, costs: calculateCAPEX(initialLattice, false)
+                });
+            }
+
+            document.getElementById('dashboard').classList.remove('translate-x-[120%]');
+            runSimulation();
+        }
+
+        function closeDashboard() {
+            document.getElementById('dashboard').classList.add('translate-x-[120%]');
+            if(marker) map.removeLayer(marker);
+        }
+
+        // ==========================================
+        // 4. SIMULATION LOOP & RENDERING
+        // ==========================================
+
+        function calculateSegmentYield(segment, year) {
+            if (year < segment.drilledYear) return { yield: 0, decay: 0 };
+            
+            let lastReamYear = segment.drilledYear;
+            let currentDiameter = segment.diameterM;
+            
+            interventionsLog.forEach(inv => {
+                if (inv.type === 'ream' && inv.targetId === segment.id && inv.year <= year) {
+                    lastReamYear = inv.year;
+                    currentDiameter = inv.newDiameter;
+                }
+            });
+
+            let effectiveAge = year - lastReamYear;
+            let activeAreaM2 = Math.PI * currentDiameter * (segment.activeYieldKm * 1000);
+            let dynamicDecayK = BASE_DECAY_K * Math.sqrt(BORE_DIAMETER_M / currentDiameter);
+            let hourlyYieldSTP = BASE_RATE_STP * currentMultiplier * (activeAreaM2 / 100) * Math.exp(-dynamicDecayK * effectiveAge);
+            return { yield: hourlyYieldSTP, decay: dynamicDecayK };
+        }
+
+        function runSimulation() {
+            let yearlyData = [];
+            let totalVolume30Yr = 0;
+            let currentAvgDecay = 0;
+            let activeSegmentsCount = 0;
+            
+            let totalCapex = { eq: 0, sup: 0, per: 0, trv: 0, con: 0, total: 0, months: 0 };
+            let totalOpex = { per: 0, sup: 0, trv: 0, con: 0, total: 0 };
+
+            segments.forEach(seg => {
+                totalCapex.eq += seg.costs.equipment; totalCapex.sup += seg.costs.supplies; totalCapex.per += seg.costs.personnel;
+                totalCapex.trv += seg.costs.travel; totalCapex.con += seg.costs.contractual; totalCapex.total += seg.costs.total;
+                totalCapex.months += seg.costs.months;
+            });
+
+            interventionsLog.forEach(inv => {
+                totalCapex.eq += inv.costs.equipment; totalCapex.sup += inv.costs.supplies; totalCapex.per += inv.costs.personnel;
+                totalCapex.trv += inv.costs.travel; totalCapex.con += inv.costs.contractual; totalCapex.total += inv.costs.total;
+                totalCapex.months += inv.costs.months;
+            });
+
+            for (let y = 0; y <= SIM_YEARS; y++) {
+                let yearYieldHr = 0, activeKmThisYear = 0, yearDecaySum = 0, activeCount = 0;
+
+                segments.forEach(seg => {
+                    let result = calculateSegmentYield(seg, y);
+                    yearYieldHr += result.yield;
+                    if (y >= seg.drilledYear && seg.activeYieldKm > 0) {
+                        activeKmThisYear += seg.activeYieldKm;
+                        yearDecaySum += result.decay;
+                        activeCount++;
+                    }
+                });
+                
+                yearlyData.push(yearYieldHr);
+                totalVolume30Yr += (yearYieldHr * 24 * 365);
+
+                if (y === SIM_YEARS && activeCount > 0) currentAvgDecay = yearDecaySum / activeCount;
+
+                if (y > 0) { 
+                    let yrOpex = calculateAnnualOPEX(activeKmThisYear);
+                    totalOpex.per += yrOpex.personnel; totalOpex.sup += yrOpex.supplies; totalOpex.trv += yrOpex.travel;
+                    totalOpex.con += yrOpex.contractual; totalOpex.total += yrOpex.total;
+                }
+            }
+
+            let h2_mass_kg = (totalVolume30Yr * 0.85) * 0.08988; // Updated to 85% H2 for Japan model
+            let ch4_mass_kg = (totalVolume30Yr * 0.15) * 0.7174;
+            let hy10_mass_kg = h2_mass_kg + ch4_mass_kg;
+            let hy10_tonnes = hy10_mass_kg / 1000;
+
+            let totex = totalCapex.total + totalOpex.total;
+            let costPerTonne = hy10_tonnes > 0 ? (totex / hy10_tonnes) : 0;
+
+            const formatMoney = (num) => `$${(num/1000).toFixed(1)}k`;
+            const formatMillions = (num) => `$${(num/1e6).toFixed(2)}M`;
+
+            document.getElementById('expEq').innerText = formatMoney(totalCapex.eq);
+            document.getElementById('expSup').innerText = formatMoney(totalCapex.sup);
+            document.getElementById('expPer').innerText = formatMoney(totalCapex.per);
+            document.getElementById('expTrv').innerText = formatMoney(totalCapex.trv);
+            document.getElementById('expCon').innerText = formatMoney(totalCapex.con);
+            document.getElementById('expTotalCapex').innerText = formatMillions(totalCapex.total);
+            document.getElementById('timelineText').innerText = `Active Drill Timeline: ${totalCapex.months.toFixed(1)} months`;
+
+            document.getElementById('opexPer').innerText = formatMoney(totalOpex.per);
+            document.getElementById('opexSup').innerText = formatMoney(totalOpex.sup);
+            document.getElementById('opexCon').innerText = formatMoney(totalOpex.con);
+            document.getElementById('opexTrv').innerText = formatMoney(totalOpex.trv);
+            document.getElementById('expTotalOpex').innerText = formatMillions(totalOpex.total);
+
+            document.getElementById('expTotex').innerText = formatMillions(totex);
+            document.getElementById('kpiVol').innerText = `${(totalVolume30Yr / 1e6).toFixed(2)} Mm³`;
+            document.getElementById('kpiMassHy10').innerText = `${hy10_tonnes.toFixed(0)} T`;
+            document.getElementById('kpiLCOE').innerText = costPerTonne > 0 ? `$${costPerTonne.toFixed(0)} /T` : 'N/A';
+            document.getElementById('decayRateVal').innerText = (currentAvgDecay * 100).toFixed(1) + "%";
+
+            updateChart(yearlyData);
+        }
+
+        // --- Interventions ---
+        function applyIntervention(type) {
+            const year = parseInt(document.getElementById('interventionYear').value);
+            if (interventionsLog.some(i => i.year === year)) {
+                alert("Only one intervention allowed per year in this simulation.");
+                return; 
+            }
+
+            if (type === 'ream') {
+                let targetSegment = null;
+                let currentD = 0;
+
+                for (let i = segments.length - 1; i >= 0; i--) {
+                    let seg = segments[i];
+                    if (seg.drilledYear <= year && seg.activeYieldKm > 0) {
+                        let d = seg.diameterM;
+                        interventionsLog.forEach(inv => { if(inv.type==='ream' && inv.targetId===seg.id && inv.year<=year) d = inv.newDiameter; });
+                        
+                        if (d < MAX_BORE_DIAMETER_M - 0.001) {
+                            targetSegment = seg;
+                            currentD = d;
+                            break;
+                        }
+                    }
+                }
+
+                if (targetSegment) {
+                    let newD = Math.min(currentD + 0.05, MAX_BORE_DIAMETER_M); 
+                    let reamCosts = calculateCAPEX(targetSegment.lengthKm, false);
+                    reamCosts.equipment *= 0.1; reamCosts.supplies *= 0.2;  
+                    reamCosts.total = reamCosts.equipment + reamCosts.supplies + reamCosts.personnel + reamCosts.travel + reamCosts.contractual;
+                    
+                    interventionsLog.push({ year, type: 'ream', targetId: targetSegment.id, newDiameter: newD, costs: reamCosts });
+                } else {
+                    alert("All active boreholes have reached the maximum diameter (45cm / ~17.7\"). You must drill a new lateral to expose fresh rock.");
+                    return;
+                }
+
+            } else if (type === 'lateral') {
+                let newLatticeKm = parseFloat(document.getElementById('lateralKmInput').value) || 1.0;
+                if(newLatticeKm <= 0) return;
+
+                let newSeg = { 
+                    id: `Lateral ${segments.length}`, drilledYear: year, lengthKm: newLatticeKm, isVertical: false,
+                    activeYieldKm: newLatticeKm, diameterM: BORE_DIAMETER_M, costs: calculateCAPEX(newLatticeKm, false) 
+                };
+                segments.push(newSeg);
+                interventionsLog.push({ year, type: 'lateral', targetId: newSeg.id, costs: newSeg.costs });
+            }
+            interventionsLog.sort((a, b) => a.year - b.year);
+            runSimulation();
+        }
+
+        function resetSimulation() {
+            confirmDrill(); 
+        }
+
+        // --- CSV Export Logic ---
+        function downloadReport() {
+            if(!window.activeSite) return;
+
+            let lines = [];
+            lines.push(["Lithospheric Reactor Simulation Report (Japan Arc)"]);
+            lines.push([]);
+            
+            lines.push(["Location and Geology"]);
+            lines.push(["Latitude", window.activeSite.lat.toFixed(4)]);
+            lines.push(["Longitude", window.activeSite.lng.toFixed(4)]);
+            lines.push(["Target Depth (km)", window.activeSite.depthKm.toFixed(2)]);
+            lines.push(["Bottom-Hole Temp (C)", window.activeSite.actualTemp.toFixed(0)]);
+            lines.push(["Reservoir Pressure (MPa)", (window.activeSite.depthKm * 11).toFixed(0)]);
+            lines.push(["Source Rock", document.getElementById('siteSource').innerText]);
+            lines.push(["Seal Caprock", document.getElementById('siteSeal').innerText]);
+            lines.push(["Thermal Gradient", window.activeSite.foundHeat.desc]);
+            lines.push([]);
+
+            lines.push(["Financial Breakdown (USD)"]);
+            lines.push(["CAPEX - Rig & Equipment", document.getElementById('expEq').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Supplies", document.getElementById('expSup').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Personnel", document.getElementById('expPer').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Travel", document.getElementById('expTrv').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Contractual", document.getElementById('expCon').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["Total CAPEX", document.getElementById('expTotalCapex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push(["Total 30-Yr OPEX", document.getElementById('expTotalOpex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push(["Lifetime TOTEX", document.getElementById('expTotex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push([]);
+
+            lines.push(["Production & Yield (30 Years)"]);
+            lines.push(["Total Volume STP (Mm3)", document.getElementById('kpiVol').innerText.replace(' Mm³', '')]);
+            lines.push(["Total Hy10 Mass (Tonnes)", document.getElementById('kpiMassHy10').innerText.replace(' T', '')]);
+            lines.push(["Levelized Cost of Energy (LCOE)", document.getElementById('kpiLCOE').innerText]);
+            lines.push([]);
+
+            lines.push(["Intervention History"]);
+            lines.push(["Year", "Type", "Target", "Cost ($)", "Details"]);
+            
+            segments.forEach(seg => {
+                if(seg.drilledYear === 0) {
+                     lines.push(["0", seg.isVertical ? "Vertical Drill" : "Lattice Drill", seg.id, seg.costs.total.toFixed(2), seg.lengthKm.toFixed(2) + " km"]);
+                }
+            });
+            
+            interventionsLog.forEach(inv => {
+                let details = inv.newDiameter ? `Reamed to ${(inv.newDiameter*100).toFixed(1)}cm` : `Lateral drilled`;
+                lines.push([inv.year, inv.type, inv.targetId, inv.costs.total.toFixed(2), details]);
+            });
+
+            let csvContent = lines.map(e => e.map(item => `"${item}"`).join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Japan_Georeactor_Sim_${window.activeSite.lat.toFixed(2)}_${window.activeSite.lng.toFixed(2)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Chart.js ---
+        function updateChart(dataPoints) {
+            const ctx = document.getElementById('yieldChart').getContext('2d');
+            let pointRadiusArray = new Array(SIM_YEARS + 1).fill(0);
+            let pointColors = new Array(SIM_YEARS + 1).fill('#ea580c');
+            
+            interventionsLog.forEach(inv => {
+                pointRadiusArray[inv.year] = 5;
+                pointColors[inv.year] = inv.type === 'ream' ? '#9ca3af' : '#9333ea';
+            });
+
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = dataPoints;
+                chartInstance.data.datasets[0].pointRadius = pointRadiusArray;
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColors;
+                chartInstance.update();
+                return;
+            }
+
+            Chart.defaults.color = '#9ca3af';
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: SIM_YEARS + 1}, (_, i) => `Y${i}`),
+                    datasets: [{
+                        data: dataPoints,
+                        borderColor: '#ea580c',
+                        backgroundColor: 'rgba(234, 88, 12, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: pointRadiusArray,
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { maxTicksLimit: 5 } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }
+                    }
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lithospheric Reactor: Exploration & Simulation</title>
+    
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #111827; overflow: hidden; }
+        
+        /* Leaflet Overrides */
+        .leaflet-control-layers { background: rgba(31, 41, 55, 0.9) !important; color: #e5e7eb !important; border: 1px solid #4b5563 !important; }
+        .leaflet-control-layers-expanded { padding: 10px; border-radius: 8px; }
+        
+        /* Legend Styling */
+        .info.legend {
+            padding: 10px 14px;
+            font: 13px/16px Arial, Helvetica, sans-serif;
+            background: rgba(17, 24, 39, 0.9);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            color: #d1d5db;
+            border: 1px solid #374151;
+        }
+        .info.legend h4 { margin: 0 0 8px; color: #9ca3af; border-bottom: 1px solid #4b5563; padding-bottom: 4px;}
+        .legend i { width: 16px; height: 16px; float: left; margin-right: 8px; opacity: 0.8; }
+
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ea580c; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        
+        .expense-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 2px 0; border-bottom: 1px solid rgba(75, 85, 99, 0.4); color: #d1d5db;}
+        .expense-row:last-child { border-bottom: none; }
+        .expense-val { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    </style>
+</head>
+<body class="relative text-gray-200">
+
+    <!-- Leaflet Map Container -->
+    <div id="map" class="absolute inset-0 z-0"></div>
+
+    <!-- Map Title Box -->
+    <div class="absolute top-4 left-12 z-[1000] bg-gray-900/90 backdrop-blur border border-gray-700 p-4 rounded-xl shadow-2xl max-w-sm pointer-events-auto">
+        <h1 class="m-0 text-lg font-bold text-orange-500 uppercase tracking-wide flex items-center gap-2">
+            Lithospheric Reactor
+        </h1>
+        <p class="mt-1 text-xs text-gray-400 leading-relaxed">Targeting Geologic Hydrogen: Overlap of Source (Ultramafic), Heat, and Seal.</p>
+        <div class="mt-3 bg-orange-500/20 border border-orange-500/50 text-orange-300 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+            <span class="text-lg">👆</span> Click anywhere on the map to evaluate site and drill.
+        </div>
+    </div>
+
+    <!-- Year 1 Drill Configuration Modal -->
+    <div id="drillModal" class="hidden absolute inset-0 z-[2000] bg-black/70 backdrop-blur-sm flex items-center justify-center pointer-events-auto">
+        <div class="bg-gray-900 border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-orange-500 mb-2 flex items-center gap-2">
+                <span>🎯</span> Target Depth Reached
+            </h3>
+            <div class="bg-gray-800 p-3 rounded border border-gray-700 mb-4 text-sm">
+                To reach the critical <b>250°C</b> reaction temperature based on the local thermal gradient, the vertical wellbore must be drilled to: <br>
+                <span class="block text-2xl font-bold text-white mt-1" id="modalDepthText">-- km</span>
+            </div>
+            
+            <label class="block text-sm font-semibold text-gray-300 mb-2">Year 1 Lattice Formation (Horizontal Drilling):</label>
+            <p class="text-xs text-gray-500 mb-2">How many kilometers of lateral drilling should be performed in the source rock to increase exposed surface area?</p>
+            <div class="flex items-center gap-3 mb-6">
+                <input type="number" id="initialLatticeKm" class="w-full bg-gray-800 border border-gray-600 rounded p-2 text-white text-lg focus:border-orange-500 focus:outline-none" value="1.0" min="0" step="0.1">
+                <span class="text-gray-400 font-bold">km</span>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="cancelDrill()" class="px-4 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">Cancel</button>
+                <button onclick="confirmDrill()" class="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold shadow-lg transition-transform transform hover:-translate-y-0.5">Commence Drilling</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Dashboard (Hidden initially) -->
+    <div id="dashboard" class="absolute top-4 right-4 bottom-8 w-[420px] z-[1000] bg-gray-900/95 backdrop-blur-md border border-gray-700 rounded-xl shadow-2xl flex flex-col transition-transform transform translate-x-[120%] duration-300 ease-out pointer-events-auto">
+        
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50 rounded-t-xl shrink-0">
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+                🛠️ Well Pad Simulator
+            </h2>
+            <button onclick="closeDashboard()" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+            
+            <!-- Site Context -->
+            <div class="bg-gray-800 rounded-lg p-3 border border-gray-700 text-sm">
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Target Depth (250°C):</span>
+                    <span id="siteDepth" class="font-bold text-orange-400">-- km</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Reservoir Pressure:</span>
+                    <span id="sitePressure" class="font-bold text-blue-400">-- MPa</span>
+                </div>
+                <div class="flex justify-between mb-1">
+                    <span class="text-gray-400">Geology:</span>
+                    <span id="siteSource" class="font-bold truncate max-w-[150px] text-right">--</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Seal:</span>
+                    <span id="siteSeal" class="font-bold text-purple-400">--</span>
+                </div>
+            </div>
+
+            <!-- Double Tracker: CAPEX and OPEX -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                <!-- CAPEX -->
+                <h3 class="text-[10px] font-bold text-orange-400 uppercase mb-1 tracking-wider border-b border-gray-700 pb-1">Capital Expenditures (CAPEX)</h3>
+                <div class="expense-row"><span>Rig & Equipment</span><span id="expEq" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Drilling Supplies (Mud/Bits)</span><span id="expSup" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Personnel & Operations</span><span id="expPer" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Travel & Lodging</span><span id="expTrv" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Contractual (Permits)</span><span id="expCon" class="expense-val">--</span></div>
+                <div class="expense-row mt-1 font-bold text-gray-200"><span>Total Initial & Intervention CAPEX</span><span id="expTotalCapex" class="expense-val text-orange-400">--</span></div>
+                <div class="text-[10px] text-gray-500 mt-1 italic text-right mb-3" id="timelineText">Active Drill Timeline: -- months</div>
+
+                <!-- OPEX -->
+                <h3 class="text-[10px] font-bold text-blue-400 uppercase mb-1 tracking-wider border-b border-gray-700 pb-1">30-Year Operating Expenses (OPEX)</h3>
+                <div class="expense-row"><span>Ongoing Personnel (Ops/Maint)</span><span id="opexPer" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Injection Supplies (Water/CO₂)</span><span id="opexSup" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Contractual (Software/Leases)</span><span id="opexCon" class="expense-val">--</span></div>
+                <div class="expense-row"><span>Travel (Site Inspections)</span><span id="opexTrv" class="expense-val">--</span></div>
+                <div class="expense-row mt-1 font-bold text-gray-200"><span>Total 30-Yr OPEX</span><span id="expTotalOpex" class="expense-val text-blue-400">--</span></div>
+                
+                <!-- TOTEX -->
+                <div class="mt-3 pt-2 border-t-2 border-gray-600 flex justify-between items-center">
+                    <span class="font-bold text-white text-sm uppercase tracking-wider">Lifetime TOTEX</span>
+                    <span id="expTotex" class="font-bold text-green-400 expense-val text-lg">--</span>
+                </div>
+            </div>
+
+            <!-- Yield KPI Grid -->
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">30-Yr Vol (STP)</span>
+                    <span id="kpiVol" class="font-bold text-base text-white">--</span>
+                </div>
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">Total Hy10 Mass</span>
+                    <span id="kpiMassHy10" class="font-bold text-base text-orange-400">--</span>
+                </div>
+                <div class="bg-gray-800 p-2 rounded-lg border border-gray-700 text-center">
+                    <span class="block text-[9px] text-gray-400 uppercase">Cost per Tonne</span>
+                    <span id="kpiLCOE" class="font-bold text-base text-green-400">--</span>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-gray-800 rounded-lg p-2 border border-gray-700 h-40 relative">
+                <canvas id="yieldChart"></canvas>
+            </div>
+
+            <!-- Interventions -->
+            <div class="mt-1 pb-4">
+                <div class="flex justify-between items-end mb-3 border-b border-gray-700 pb-1">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Reservoir Interventions</h3>
+                    <span id="kpiDecay" class="text-[10px] text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-600">Avg Depletion: <span class="text-orange-400 font-bold" id="decayRateVal">18.0%</span>/yr</span>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs mb-1">
+                        <label class="text-gray-300">Execution Year:</label>
+                        <span id="yearLabel" class="text-orange-400 font-bold">Year 5</span>
+                    </div>
+                    <input type="range" id="interventionYear" min="1" max="29" value="5" class="w-full" oninput="document.getElementById('yearLabel').innerText = 'Year ' + this.value">
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <button onclick="applyIntervention('ream')" class="bg-gray-700 border border-gray-600 hover:border-gray-400 text-white text-xs font-bold py-2 px-3 rounded flex justify-between items-center transition-colors">
+                        <span>Ream Active Bore (+5cm Ø)</span>
+                        <span class="text-gray-400 font-normal italic ml-2">Targets newest</span>
+                    </button>
+                    
+                    <div class="flex gap-2">
+                        <input type="number" id="lateralKmInput" value="1.0" min="0.1" step="0.1" class="w-20 bg-gray-800 border border-gray-600 rounded px-2 text-white text-sm focus:border-purple-500 focus:outline-none text-center" placeholder="km">
+                        <button onclick="applyIntervention('lateral')" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2 px-3 rounded transition-colors shadow">
+                            Drill New Lateral (km)
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons: Export & Reset -->
+                <div class="flex gap-2 mt-4">
+                    <button onclick="downloadReport()" class="flex-1 border border-blue-500/50 text-blue-400 hover:bg-blue-600 hover:text-white text-xs font-bold py-1.5 rounded transition-colors shadow flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export CSV
+                    </button>
+                    <button onclick="resetSimulation()" class="flex-1 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white text-xs font-bold py-1.5 rounded transition-colors shadow">
+                        Reset Well
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATA & MAP INITIALIZATION
+        // ==========================================
+        
+        const map = L.map('map', { zoomControl: false }).setView([39.8283, -98.5795], 4);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+        // --- Base Layers ---
+        const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri, USGS'
+        }).addTo(map);
+
+        const esriDarkGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Esri'
+        });
+
+        // --- Geologic Polygons ---
+        const ultramaficPolygons = [
+            { name: "Klamath Mountains", coords: [[42.9, -124.2], [42.9, -123.2], [42.5, -123.0], [42.0, -123.5], [41.5, -123.8], [41.2, -122.8], [40.8, -122.8], [40.5, -123.5], [41.0, -124.2], [42.0, -124.5]] },
+            { name: "Twin Sisters Dunite", coords: [[48.65, -122.05], [48.75, -121.95], [48.75, -121.85], [48.65, -121.85], [48.60, -121.95]] },
+            { name: "Coast Range Ophiolite", coords: [[39.8, -123.8], [39.5, -123.0], [39.0, -122.3], [38.5, -122.2], [38.2, -122.5], [38.8, -123.5], [39.5, -124.0]] },
+            { name: "New Idria", coords: [[36.45, -120.75], [36.40, -120.60], [36.30, -120.55], [36.35, -120.45], [36.50, -120.65], [36.55, -120.80]] },
+            { name: "Sierra Nevada", coords: [[40.2, -121.6], [39.8, -121.2], [39.0, -121.0], [38.0, -120.6], [37.5, -120.2], [37.0, -119.8], [37.2, -120.5], [38.5, -121.2], [39.5, -121.8]] },
+            { name: "Riggins Terrane", coords: [[45.8, -116.8], [45.8, -116.4], [45.4, -116.2], [45.0, -116.3], [44.8, -116.6], [45.2, -116.9]] },
+            { name: "State Line Kimberlite", coords: [[41.1, -105.8], [41.2, -105.5], [41.0, -105.3], [40.8, -105.5], [40.8, -105.8], [41.0, -106.0]] },
+            { name: "Powderhorn Complex", coords: [[38.35, -107.18], [38.35, -107.05], [38.20, -107.05], [38.15, -107.18], [38.25, -107.25]] },
+            { name: "South Pass", coords: [[42.7, -109.0], [42.7, -108.5], [42.5, -108.3], [42.3, -108.5], [42.3, -108.8], [42.5, -109.1]] },
+            { name: "Coal Creek", coords: [[30.8, -98.75], [30.8, -98.60], [30.7, -98.55], [30.6, -98.65], [30.65, -98.80]] },
+            { name: "Vermont Serpentinites", coords: [[45.0, -72.2], [44.8, -72.4], [44.5, -72.6], [44.0, -72.8], [43.5, -72.7], [44.2, -72.3], [44.8, -72.0]] },
+            { name: "State Line (PA/MD)", coords: [[39.80, -76.30], [39.75, -76.10], [39.70, -76.05], [39.65, -76.20], [39.70, -76.40]] },
+            { name: "Baltimore Mafic", coords: [[39.65, -76.80], [39.50, -76.50], [39.35, -76.40], [39.30, -76.60], [39.45, -76.90]] },
+            { name: "Blue Ridge Belt", coords: [[36.2, -81.8], [35.8, -82.2], [35.5, -82.8], [35.0, -83.5], [35.2, -83.8], [35.8, -83.0], [36.0, -82.0]] },
+            { name: "Mid-Continent Rift", coords: [[47.5, -92.5], [46.8, -91.0], [46.5, -90.0], [46.8, -89.0], [47.5, -90.5], [48.0, -92.0]] }
+        ];
+
+        const saltBasinPolygons = [
+            { name: "Gulf Coast Basin", coords: [[33.0, -95.0], [32.5, -91.0], [31.0, -88.0], [29.0, -88.5], [28.0, -90.0], [27.0, -94.0], [26.0, -97.0], [27.0, -98.5], [29.0, -98.0], [31.0, -97.0]] },
+            { name: "Paradox Basin", coords: [[39.2, -110.5], [38.8, -108.8], [38.2, -108.2], [37.2, -109.0], [37.2, -110.5], [38.0, -111.0]] },
+            { name: "Michigan Basin", coords: [[45.5, -85.0], [45.0, -83.0], [43.5, -82.5], [42.5, -83.0], [42.0, -85.0], [42.5, -86.5], [44.5, -86.5]] },
+            { name: "Permian Basin", coords: [[33.5, -103.5], [33.0, -101.5], [31.5, -101.0], [31.0, -102.5], [31.5, -104.5], [32.5, -104.5]] }
+        ];
+
+        const shaleBasins = [
+            { name: "Bakken", coords: [[49.0, -106.0], [49.2, -102.0], [48.5, -100.0], [46.5, -100.5], [46.0, -103.5], [47.0, -106.5], [48.0, -107.0]] },
+            { name: "Marcellus", coords: [[43.0, -75.0], [42.0, -74.5], [41.0, -75.5], [39.0, -78.5], [37.5, -82.0], [38.5, -83.0], [40.0, -81.0], [41.5, -79.0], [42.5, -77.0]] },
+            { name: "Wolfcamp", coords: [[33.8, -103.0], [33.5, -101.0], [32.0, -100.5], [30.5, -101.5], [30.5, -103.5], [31.5, -104.5], [32.5, -104.5]] },
+            { name: "Eagle Ford", coords: [[30.5, -96.5], [29.5, -96.5], [28.5, -98.0], [28.0, -100.0], [28.5, -100.5], [29.5, -99.5], [30.0, -97.5]] },
+            { name: "Woodford", coords: [[36.8, -99.5], [36.5, -97.0], [35.5, -96.5], [34.5, -97.5], [34.5, -99.0], [35.5, -100.0]] },
+            { name: "Niobrara", coords: [[42.5, -105.0], [42.0, -102.5], [40.0, -103.0], [39.5, -104.5], [40.0, -105.5], [41.5, -105.5]] }
+        ];
+
+        const heatContours = [
+            { val: 65, desc: "Regional Heat", coords: [[49.0, -125.0], [49.0, -114.0], [46.0, -112.0], [45.0, -108.0], [41.0, -105.0], [37.0, -104.0], [32.0, -105.0], [31.5, -108.0], [31.5, -114.0], [32.5, -116.0], [34.0, -121.0], [38.0, -123.0], [42.0, -124.5], [49.0, -125.0]] },
+            { val: 65, desc: "Gulf Coast", coords: [[30.5, -97.0], [31.0, -94.0], [30.8, -91.0], [30.5, -89.0], [29.0, -89.0], [28.5, -91.0], [28.0, -94.0], [27.5, -97.0], [28.0, -99.0]] },
+            { val: 80, desc: "Basin and Range", coords: [[44.5, -117.0], [43.5, -112.0], [42.5, -111.0], [41.0, -111.5], [39.0, -111.0], [37.0, -112.5], [36.0, -114.5], [35.5, -117.0], [36.5, -118.5], [38.5, -119.5], [41.0, -119.5], [42.5, -118.5]] },
+            { val: 75, desc: "Rio Grande Rift", coords: [[39.0, -106.2], [38.0, -105.5], [37.0, -105.5], [36.0, -106.0], [34.0, -106.2], [32.0, -106.0], [31.8, -107.0], [33.0, -107.5], [35.0, -107.0], [37.0, -106.8]] },
+            { val: 105, desc: "Yellowstone", coords: [[45.0, -111.2], [45.1, -110.0], [44.4, -109.8], [44.2, -111.0]] },
+            { val: 105, desc: "Salton Sea", coords: [[33.8, -116.3], [33.5, -115.3], [32.6, -115.4], [32.9, -116.4]] },
+            { val: 105, desc: "The Geysers", coords: [[39.1, -123.0], [38.9, -122.6], [38.7, -122.7], [38.8, -123.1]] },
+            { val: 105, desc: "Valles Caldera", coords: [[36.0, -106.7], [36.0, -106.3], [35.8, -106.3], [35.8, -106.7]] }
+        ];
+
+        // Map Layers Rendering
+        const ultramaficLayer = L.layerGroup().addTo(map);
+        ultramaficPolygons.forEach(site => { L.polygon(site.coords, { fillColor: "#ea580c", color: "#c2410c", weight: 2, fillOpacity: 0.7, interactive: false }).addTo(ultramaficLayer); });
+
+        const saltLayer = L.layerGroup().addTo(map);
+        saltBasinPolygons.forEach(basin => { L.polygon(basin.coords, { fillColor: "#9333ea", color: "#7e22ce", weight: 1, fillOpacity: 0.4, interactive: false }).addTo(saltLayer); });
+
+        const shaleLayer = L.layerGroup().addTo(map);
+        shaleBasins.forEach(basin => { L.polygon(basin.coords, { fillColor: "#4b5563", color: "#374151", weight: 1, fillOpacity: 0.5, interactive: false }).addTo(shaleLayer); });
+
+        const heatLayer = L.layerGroup().addTo(map);
+        heatContours.sort((a, b) => a.val - b.val).forEach(zone => {
+            let color = zone.val >= 100 ? "#7f1d1d" : (zone.val >= 80 ? "#dc2626" : "#f97316");
+            let op = zone.val >= 100 ? 0.7 : (zone.val >= 80 ? 0.5 : 0.2);
+            L.polygon(zone.coords, { fillColor: color, color: "transparent", fillOpacity: op, interactive: false }).addTo(heatLayer);
+        });
+
+        // Layer Control
+        L.control.layers(
+            { "Topographic": esriTopo, "Dark Canvas": esriDarkGray },
+            { "<span style='color:#ea580c'>■</span> Ultramafic Source": ultramaficLayer, "<span>🔥</span> Thermal Gradients": heatLayer, "<span style='color:#9333ea'>■</span> Salt Seals": saltLayer, "<span style='color:#4b5563'>■</span> Shale Basins": shaleLayer },
+            { collapsed: false }
+        ).addTo(map);
+
+
+        // ==========================================
+        // 2. STATE & COST PHYSICS ENGINE
+        // ==========================================
+
+        let marker = null;
+        let chartInstance = null;
+        
+        // Active Well State
+        let currentMultiplier = 1.0;
+        let siteDepthKm = 1.0;
+        
+        const SIM_YEARS = 30;
+        const BORE_DIAMETER_M = 0.216; // 8.5" Initial
+        const MAX_BORE_DIAMETER_M = 0.450; // ~17.7" Hard limit for reaming
+        const BASE_RATE_STP = 1.2; // m3/hr per 100m2
+        const BASE_DECAY_K = 0.18; // Base depletion factor for 8.5" well
+
+        let segments = [];
+        let interventionsLog = [];
+
+        // CAPEX Calculation (Mobilization & Drilling)
+        function calculateCAPEX(lengthKm, isVertical) {
+            let months = lengthKm * 1.5; 
+            let personnelCost = months * 16000;
+            let travelCost = months * 3750;
+            
+            // Vertical absorbs initial mobilization setup, laterals are cheaper extensions
+            let equipmentCost = isVertical ? 1098775 : 85000;
+            let suppliesCost = lengthKm * 150000;
+            let contractualCost = isVertical ? 178800 : 25000;
+            
+            return {
+                personnel: personnelCost,
+                travel: travelCost,
+                equipment: equipmentCost,
+                supplies: suppliesCost,
+                contractual: contractualCost,
+                total: personnelCost + travelCost + equipmentCost + suppliesCost + contractualCost,
+                months: months
+            };
+        }
+
+        // OPEX Calculation (Annual Operations)
+        function calculateAnnualOPEX(activeKm) {
+            // Personnel: Base management + scale with complexity (lattice size)
+            let personnel = 185000 + (30000 * activeKm); 
+            // Supplies: Pumping water, compressing CO2, maintenance
+            let supplies = 147000 * activeKm; 
+            // Travel: Site visits
+            let travel = 44622; 
+            // Contractual: Software/Leasing
+            let contractual = 75000; 
+            
+            return {
+                personnel: personnel,
+                supplies: supplies,
+                travel: travel,
+                contractual: contractual,
+                total: personnel + supplies + travel + contractual
+            };
+        }
+
+        function isPointInPoly(lat, lng, polygonCoords) {
+            var x = lat, y = lng, inside = false;
+            for (var i = 0, j = polygonCoords.length - 1; i < polygonCoords.length; j = i++) {
+                var xi = polygonCoords[i][0], yi = polygonCoords[i][1];
+                var xj = polygonCoords[j][0], yj = polygonCoords[j][1];
+                var intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        // ==========================================
+        // 3. UI INTERACTIONS
+        // ==========================================
+
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+
+            if(marker) map.removeLayer(marker);
+            marker = L.circleMarker([lat, lng], { radius: 6, fillColor: "#fff", color: "#000", weight: 2, fillOpacity: 1 }).addTo(map);
+
+            window.activeSite = { lat, lng };
+            window.activeSite.foundSource = ultramaficPolygons.find(p => isPointInPoly(lat, lng, p.coords));
+            window.activeSite.foundSalt = saltBasinPolygons.find(p => isPointInPoly(lat, lng, p.coords));
+            window.activeSite.foundShale = shaleBasins.find(p => isPointInPoly(lat, lng, p.coords));
+            
+            let foundHeat = { val: 55, desc: "Continental Avg" };
+            heatContours.forEach(zone => { if(isPointInPoly(lat, lng, zone.coords)) foundHeat = zone; });
+            window.activeSite.foundHeat = foundHeat;
+
+            let gradient = foundHeat.val >= 100 ? 45 : (foundHeat.val >= 80 ? 35 : (foundHeat.val >= 65 ? 30 : 25));
+            siteDepthKm = (250 - 15) / gradient;
+            currentMultiplier = (window.activeSite.foundSource ? 1.0 : 0.05) * (foundHeat.val / 65.0);
+
+            document.getElementById('modalDepthText').innerText = siteDepthKm.toFixed(2) + " km";
+            document.getElementById('drillModal').classList.remove('hidden');
+        });
+
+        function cancelDrill() {
+            document.getElementById('drillModal').classList.add('hidden');
+            if(marker) map.removeLayer(marker);
+        }
+
+        function confirmDrill() {
+            document.getElementById('drillModal').classList.add('hidden');
+            let initialLattice = parseFloat(document.getElementById('initialLatticeKm').value) || 0;
+            
+            document.getElementById('siteDepth').innerText = siteDepthKm.toFixed(2) + " km";
+            let pressureMPa = siteDepthKm * 10;
+            document.getElementById('sitePressure').innerText = pressureMPa.toFixed(0) + " MPa";
+            
+            let source = window.activeSite.foundSource;
+            document.getElementById('siteSource').innerText = source ? source.name : "Non-Ultramafic";
+            document.getElementById('siteSource').className = source ? "font-bold text-orange-400 truncate max-w-[150px] text-right" : "font-bold text-gray-500 truncate max-w-[150px] text-right";
+            
+            let salt = window.activeSite.foundSalt;
+            let shale = window.activeSite.foundShale;
+            let sealStr = salt ? salt.name : (shale ? shale.name : "None (Leak Risk)");
+            document.getElementById('siteSeal').innerText = sealStr;
+            document.getElementById('siteSeal').className = salt || shale ? "font-bold text-purple-400" : "font-bold text-red-500";
+
+            segments = [];
+            interventionsLog = [];
+            
+            // Initial CAPEX (Vertical + Lattice)
+            segments.push({
+                id: 'Vertical Bore',
+                drilledYear: 0,
+                lengthKm: siteDepthKm,
+                isVertical: true,
+                activeYieldKm: 0.1, 
+                diameterM: BORE_DIAMETER_M,
+                costs: calculateCAPEX(siteDepthKm, true)
+            });
+
+            if (initialLattice > 0) {
+                segments.push({
+                    id: 'Initial Lattice',
+                    drilledYear: 0,
+                    lengthKm: initialLattice,
+                    isVertical: false,
+                    activeYieldKm: initialLattice,
+                    diameterM: BORE_DIAMETER_M,
+                    costs: calculateCAPEX(initialLattice, false)
+                });
+            }
+
+            document.getElementById('dashboard').classList.remove('translate-x-[120%]');
+            runSimulation();
+        }
+
+        function closeDashboard() {
+            document.getElementById('dashboard').classList.add('translate-x-[120%]');
+            if(marker) map.removeLayer(marker);
+        }
+
+        // ==========================================
+        // 4. SIMULATION LOOP & RENDERING
+        // ==========================================
+
+        function calculateSegmentYield(segment, year) {
+            if (year < segment.drilledYear) return { yield: 0, decay: 0 };
+            
+            let lastReamYear = segment.drilledYear;
+            let currentDiameter = segment.diameterM;
+            
+            interventionsLog.forEach(inv => {
+                if (inv.type === 'ream' && inv.targetId === segment.id && inv.year <= year) {
+                    lastReamYear = inv.year;
+                    currentDiameter = inv.newDiameter;
+                }
+            });
+
+            let effectiveAge = year - lastReamYear;
+            let activeAreaM2 = Math.PI * currentDiameter * (segment.activeYieldKm * 1000);
+            
+            // PHYSICS: Dynamic Decay Rate based on cylindrical diffusion
+            // A wider bore acts more like a flat plane, resulting in slightly slower depletion percentage
+            let dynamicDecayK = BASE_DECAY_K * Math.sqrt(BORE_DIAMETER_M / currentDiameter);
+
+            let hourlyYieldSTP = BASE_RATE_STP * currentMultiplier * (activeAreaM2 / 100) * Math.exp(-dynamicDecayK * effectiveAge);
+            return { yield: hourlyYieldSTP, decay: dynamicDecayK };
+        }
+
+        function runSimulation() {
+            let yearlyData = [];
+            let totalVolume30Yr = 0;
+            let currentAvgDecay = 0;
+            let activeSegmentsCount = 0;
+            
+            // Financial Aggregators
+            let totalCapex = { eq: 0, sup: 0, per: 0, trv: 0, con: 0, total: 0, months: 0 };
+            let totalOpex = { per: 0, sup: 0, trv: 0, con: 0, total: 0 };
+
+            // 1. Sum CAPEX from original drilling
+            segments.forEach(seg => {
+                totalCapex.eq += seg.costs.equipment;
+                totalCapex.sup += seg.costs.supplies;
+                totalCapex.per += seg.costs.personnel;
+                totalCapex.trv += seg.costs.travel;
+                totalCapex.con += seg.costs.contractual;
+                totalCapex.total += seg.costs.total;
+                totalCapex.months += seg.costs.months;
+            });
+
+            // Sum CAPEX from later interventions
+            interventionsLog.forEach(inv => {
+                totalCapex.eq += inv.costs.equipment;
+                totalCapex.sup += inv.costs.supplies;
+                totalCapex.per += inv.costs.personnel;
+                totalCapex.trv += inv.costs.travel;
+                totalCapex.con += inv.costs.contractual;
+                totalCapex.total += inv.costs.total;
+                totalCapex.months += inv.costs.months;
+            });
+
+            // 2. Run 30-Year Physics & OPEX Loop
+            for (let y = 0; y <= SIM_YEARS; y++) {
+                // Yield
+                let yearYieldHr = 0;
+                let activeKmThisYear = 0;
+                let yearDecaySum = 0;
+                let activeCount = 0;
+
+                segments.forEach(seg => {
+                    let result = calculateSegmentYield(seg, y);
+                    yearYieldHr += result.yield;
+                    if (y >= seg.drilledYear && seg.activeYieldKm > 0) {
+                        activeKmThisYear += seg.activeYieldKm;
+                        yearDecaySum += result.decay;
+                        activeCount++;
+                    }
+                });
+                
+                yearlyData.push(yearYieldHr);
+                totalVolume30Yr += (yearYieldHr * 24 * 365);
+
+                // Update final year average decay for UI
+                if (y === SIM_YEARS && activeCount > 0) {
+                    currentAvgDecay = yearDecaySum / activeCount;
+                }
+
+                // OPEX for this year
+                if (y > 0) { 
+                    let yrOpex = calculateAnnualOPEX(activeKmThisYear);
+                    totalOpex.per += yrOpex.personnel;
+                    totalOpex.sup += yrOpex.supplies;
+                    totalOpex.trv += yrOpex.travel;
+                    totalOpex.con += yrOpex.contractual;
+                    totalOpex.total += yrOpex.total;
+                }
+            }
+
+            // Mass (Hy10 Mix: 10% H2, 90% CH4 molar)
+            let h2_mass_kg = (totalVolume30Yr * 0.10) * 0.08988;
+            let ch4_mass_kg = (totalVolume30Yr * 0.90) * 0.7174;
+            let hy10_mass_kg = h2_mass_kg + ch4_mass_kg;
+            let hy10_tonnes = hy10_mass_kg / 1000;
+
+            // LCOE estimate (Total Cost / Tonnes)
+            let totex = totalCapex.total + totalOpex.total;
+            let costPerTonne = hy10_tonnes > 0 ? (totex / hy10_tonnes) : 0;
+
+            // Update UI Format Helpers
+            const formatMoney = (num) => `$${(num/1000).toFixed(1)}k`;
+            const formatMillions = (num) => `$${(num/1e6).toFixed(2)}M`;
+
+            // DOM: CAPEX
+            document.getElementById('expEq').innerText = formatMoney(totalCapex.eq);
+            document.getElementById('expSup').innerText = formatMoney(totalCapex.sup);
+            document.getElementById('expPer').innerText = formatMoney(totalCapex.per);
+            document.getElementById('expTrv').innerText = formatMoney(totalCapex.trv);
+            document.getElementById('expCon').innerText = formatMoney(totalCapex.con);
+            document.getElementById('expTotalCapex').innerText = formatMillions(totalCapex.total);
+            document.getElementById('timelineText').innerText = `Active Drill Timeline: ${totalCapex.months.toFixed(1)} months`;
+
+            // DOM: OPEX
+            document.getElementById('opexPer').innerText = formatMoney(totalOpex.per);
+            document.getElementById('opexSup').innerText = formatMoney(totalOpex.sup);
+            document.getElementById('opexCon').innerText = formatMoney(totalOpex.con);
+            document.getElementById('opexTrv').innerText = formatMoney(totalOpex.trv);
+            document.getElementById('expTotalOpex').innerText = formatMillions(totalOpex.total);
+
+            // DOM: TOTEX & KPIs
+            document.getElementById('expTotex').innerText = formatMillions(totex);
+            document.getElementById('kpiVol').innerText = `${(totalVolume30Yr / 1e6).toFixed(2)} Mm³`;
+            document.getElementById('kpiMassHy10').innerText = `${hy10_tonnes.toFixed(0)} T`;
+            document.getElementById('kpiLCOE').innerText = costPerTonne > 0 ? `$${costPerTonne.toFixed(0)} /T` : 'N/A';
+            
+            // Dynamic Decay UI
+            document.getElementById('decayRateVal').innerText = (currentAvgDecay * 100).toFixed(1) + "%";
+
+            updateChart(yearlyData);
+        }
+
+        // --- Interventions ---
+        function applyIntervention(type) {
+            const year = parseInt(document.getElementById('interventionYear').value);
+            if (interventionsLog.some(i => i.year === year)) {
+                alert("Only one intervention allowed per year in this simulation.");
+                return; 
+            }
+
+            if (type === 'ream') {
+                // Targeted Reaming: Find the newest segment that is eligible and not maxed out
+                let targetSegment = null;
+                let currentD = 0;
+
+                // Iterate backwards through segments (Newest first)
+                for (let i = segments.length - 1; i >= 0; i--) {
+                    let seg = segments[i];
+                    if (seg.drilledYear <= year && seg.activeYieldKm > 0) {
+                        let d = seg.diameterM;
+                        interventionsLog.forEach(inv => { 
+                            if(inv.type==='ream' && inv.targetId===seg.id && inv.year<=year) d = inv.newDiameter; 
+                        });
+                        
+                        // Small subtraction prevents floating point logic errors around the max limit
+                        if (d < MAX_BORE_DIAMETER_M - 0.001) {
+                            targetSegment = seg;
+                            currentD = d;
+                            break; // Target found, stop looking
+                        }
+                    }
+                }
+
+                if (targetSegment) {
+                    let newD = Math.min(currentD + 0.05, MAX_BORE_DIAMETER_M); // Cap at max diameter
+                    
+                    // Reaming is much cheaper than new drilling
+                    let reamCosts = calculateCAPEX(targetSegment.lengthKm, false);
+                    reamCosts.equipment *= 0.1; // Minimal new equipment needed to ream
+                    reamCosts.supplies *= 0.2;  // Less mud/fuel needed for reaming vs fresh bore
+                    reamCosts.total = reamCosts.equipment + reamCosts.supplies + reamCosts.personnel + reamCosts.travel + reamCosts.contractual;
+                    
+                    interventionsLog.push({ year, type: 'ream', targetId: targetSegment.id, newDiameter: newD, costs: reamCosts });
+                } else {
+                    alert("All active boreholes have reached the maximum diameter (45cm / ~17.7\"). You must drill a new lateral to expose fresh rock.");
+                    return;
+                }
+
+            } else if (type === 'lateral') {
+                let newLatticeKm = parseFloat(document.getElementById('lateralKmInput').value) || 1.0;
+                if(newLatticeKm <= 0) return;
+
+                let newSeg = { 
+                    id: `Lateral ${segments.length}`, 
+                    drilledYear: year, 
+                    lengthKm: newLatticeKm, 
+                    isVertical: false,
+                    activeYieldKm: newLatticeKm,
+                    diameterM: BORE_DIAMETER_M, 
+                    costs: calculateCAPEX(newLatticeKm, false) 
+                };
+                segments.push(newSeg);
+                interventionsLog.push({ year, type: 'lateral', targetId: newSeg.id, costs: newSeg.costs });
+            }
+            interventionsLog.sort((a, b) => a.year - b.year);
+            runSimulation();
+        }
+
+        function resetSimulation() {
+            confirmDrill(); // Reruns with initial values
+        }
+
+        // --- CSV Export Logic ---
+        function downloadReport() {
+            if(!window.activeSite) return;
+
+            let lines = [];
+            lines.push(["Lithospheric Reactor Simulation Report"]);
+            lines.push([]);
+            
+            lines.push(["Location and Geology"]);
+            lines.push(["Latitude", window.activeSite.lat.toFixed(4)]);
+            lines.push(["Longitude", window.activeSite.lng.toFixed(4)]);
+            lines.push(["Target Depth (km)", siteDepthKm.toFixed(2)]);
+            lines.push(["Reservoir Pressure (MPa)", (siteDepthKm * 10).toFixed(0)]);
+            lines.push(["Source Rock", document.getElementById('siteSource').innerText]);
+            lines.push(["Seal Caprock", document.getElementById('siteSeal').innerText]);
+            lines.push(["Heat Flow (mW/m2)", window.activeSite.foundHeat.val]);
+            lines.push([]);
+
+            lines.push(["Financial Breakdown (USD)"]);
+            lines.push(["CAPEX - Rig & Equipment", document.getElementById('expEq').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Supplies", document.getElementById('expSup').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Personnel", document.getElementById('expPer').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Travel", document.getElementById('expTrv').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["CAPEX - Contractual", document.getElementById('expCon').innerText.replace(/\$|k/g, '00')]);
+            lines.push(["Total CAPEX", document.getElementById('expTotalCapex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push(["Total 30-Yr OPEX", document.getElementById('expTotalOpex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push(["Lifetime TOTEX", document.getElementById('expTotex').innerText.replace(/\$|M/g, '0000')]);
+            lines.push([]);
+
+            lines.push(["Production & Yield (30 Years)"]);
+            lines.push(["Total Volume STP (Mm3)", document.getElementById('kpiVol').innerText.replace(' Mm³', '')]);
+            lines.push(["Total Hy10 Mass (Tonnes)", document.getElementById('kpiMassHy10').innerText.replace(' T', '')]);
+            lines.push(["Levelized Cost of Energy (LCOE)", document.getElementById('kpiLCOE').innerText]);
+            lines.push([]);
+
+            lines.push(["Intervention History"]);
+            lines.push(["Year", "Type", "Target", "Cost ($)", "Details"]);
+            
+            segments.forEach(seg => {
+                if(seg.drilledYear === 0) {
+                     lines.push(["0", seg.isVertical ? "Vertical Drill" : "Lattice Drill", seg.id, seg.costs.total.toFixed(2), seg.lengthKm.toFixed(2) + " km"]);
+                }
+            });
+            
+            interventionsLog.forEach(inv => {
+                let details = inv.newDiameter ? `Reamed to ${(inv.newDiameter*100).toFixed(1)}cm` : `Lateral drilled`;
+                lines.push([inv.year, inv.type, inv.targetId, inv.costs.total.toFixed(2), details]);
+            });
+
+            // Convert to CSV formatting
+            let csvContent = lines.map(e => e.map(item => `"${item}"`).join(",")).join("\n");
+            
+            // Create Blob and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Well_Pad_Sim_${window.activeSite.lat.toFixed(2)}_${window.activeSite.lng.toFixed(2)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- Chart.js ---
+        function updateChart(dataPoints) {
+            const ctx = document.getElementById('yieldChart').getContext('2d');
+            let pointRadiusArray = new Array(SIM_YEARS + 1).fill(0);
+            let pointColors = new Array(SIM_YEARS + 1).fill('#ea580c');
+            
+            interventionsLog.forEach(inv => {
+                pointRadiusArray[inv.year] = 5;
+                pointColors[inv.year] = inv.type === 'ream' ? '#9ca3af' : '#9333ea';
+            });
+
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = dataPoints;
+                chartInstance.data.datasets[0].pointRadius = pointRadiusArray;
+                chartInstance.data.datasets[0].pointBackgroundColor = pointColors;
+                chartInstance.update();
+                return;
+            }
+
+            Chart.defaults.color = '#9ca3af';
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: SIM_YEARS + 1}, (_, i) => `Y${i}`),
+                    datasets: [{
+                        data: dataPoints,
+                        borderColor: '#ea580c',
+                        backgroundColor: 'rgba(234, 88, 12, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: pointRadiusArray,
+                        pointBackgroundColor: pointColors,
+                        pointBorderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#374151' }, ticks: { maxTicksLimit: 5 } },
+                        x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }
+                    }
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

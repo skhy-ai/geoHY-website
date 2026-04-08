@@ -139,6 +139,128 @@ const AIInversion = () => {
           </p>
         </section>
 
+        {/* ── OSS Inversion Stack ── */}
+        <section className="mt-20 pt-12 border-t border-white/10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-geo-orange/10 border border-geo-orange/30 text-geo-orange text-xs font-bold uppercase tracking-widest mb-8">
+            Open-Source Intelligence Layer
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">
+            Powered by Industry-Grade Inversion Frameworks
+          </h2>
+          <p className="text-muted-foreground text-lg mb-10 leading-relaxed max-w-2xl">
+            GeoHY's inversion pipeline is built on peer-reviewed, open-source geophysical frameworks — the same tools used by global research institutions. A Python FastAPI microservice (deploying on Railway) orchestrates these libraries to process uploaded survey data and return probabilistic subsurface models.
+          </p>
+
+          {/* OSS Package Cards */}
+          <div className="grid md:grid-cols-2 gap-5 mb-12">
+            {[
+              {
+                name: "SimPEG",
+                version: "MIT · Python",
+                tag: "Core Inversion Engine",
+                tagColor: "bg-orange-500/20 text-orange-400",
+                href: "https://simpeg.xyz",
+                icon: "⚡",
+                desc: "Simulation and Parameter Estimation in Geophysics. Full 1D/2D/3D forward modelling and gradient-based inversion for DC resistivity, EM, gravity, magnetics, and seismic surveys. GeoHY uses this for gravity and MT inversions to map serpentinite body geometry.",
+                specs: ["DC / IP inversion", "Gravity & Magnetics", "PDE-based forward models", "~629 GitHub stars"],
+              },
+              {
+                name: "Fatiando a Terra",
+                version: "BSD-3 · Python",
+                tag: "Gravity & Gridding",
+                tagColor: "bg-green-500/20 text-green-400",
+                href: "https://www.fatiando.org",
+                icon: "🌍",
+                desc: "A collection of open-source Python tools for geophysics. Harmonica handles gravity and magnetic data processing; Choclo provides efficient kernel computations; Verde implements machine learning-style spatial gridding. Used for Bouguer anomaly inversion over target regions.",
+                specs: ["Harmonica: gravity/mag", "Verde: ML-style gridding", "Choclo: kernel ops", "Actively maintained"],
+              },
+              {
+                name: "PyGIMLi",
+                version: "Apache-2.0 · Python/C++",
+                tag: "ERT & Seismic",
+                tagColor: "bg-blue-500/20 text-blue-400",
+                href: "https://www.pygimli.org",
+                icon: "📡",
+                desc: "Geophysical Inversion & Modelling Library. FEM-based forward modelling with exceptional support for Electrical Resistivity Tomography (ERT) and seismic refraction. Deployed for characterising fluid-saturated fracture networks and fault conductivity mapping.",
+                specs: ["FEM-based forward models", "ERT & seismic refraction", "2D/3D inversion", "C++ performance core"],
+              },
+              {
+                name: "bayes-bay",
+                version: "Open · Python",
+                tag: "Bayesian Uncertainty",
+                tagColor: "bg-purple-500/20 text-purple-400",
+                href: "https://github.com/fmaussion/bayes-bay",
+                icon: "🔮",
+                desc: "Generalised Bayesian inversion framework using trans-dimensional Markov Chain Monte Carlo (MCMC). Provides full posterior probability distributions — critical for quantifying uncertainty in geological hydrogen resource estimates rather than simply producing point estimates.",
+                specs: ["Trans-dimensional MCMC", "Posterior distributions", "Uncertainty quantification", "Multi-method compatible"],
+              },
+            ].map((pkg) => (
+              <a
+                key={pkg.name}
+                href={pkg.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass-panel p-6 rounded-2xl border border-white/10 hover:border-geo-orange/40 transition-colors group block"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{pkg.icon}</span>
+                    <div>
+                      <h3 className="text-lg font-bold text-white group-hover:text-geo-orange transition-colors">{pkg.name}</h3>
+                      <span className="text-xs text-muted-foreground font-mono">{pkg.version}</span>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${pkg.tagColor}`}>{pkg.tag}</span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{pkg.desc}</p>
+                <ul className="flex flex-wrap gap-2">
+                  {pkg.specs.map((s) => (
+                    <li key={s} className="text-[10px] font-mono px-2 py-1 bg-white/5 rounded border border-white/10 text-foreground/60">{s}</li>
+                  ))}
+                </ul>
+              </a>
+            ))}
+          </div>
+
+          {/* Railway API Teaser */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-gray-900 to-black p-8">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-xl">🚂</div>
+                  <div>
+                    <h3 className="font-bold text-white">geohy-inversion-api</h3>
+                    <span className="text-xs text-muted-foreground font-mono">FastAPI · Python 3.12 · Railway.app</span>
+                  </div>
+                  <span className="ml-auto px-2 py-1 text-xs font-bold bg-amber-500/20 text-amber-400 rounded-full border border-amber-500/30">In Development</span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                  A Railway-hosted Python microservice exposing REST endpoints for on-demand geophysical inversions. Upload survey CSV data, select an inversion type, and receive a colour-mapped subsurface model within seconds.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    "POST /gravity-inversion",
+                    "POST /em-inversion",
+                    "POST /ert-profile",
+                    "GET /model/{job_id}",
+                  ].map((ep) => (
+                    <code key={ep} className="text-xs font-mono bg-black/50 border border-white/10 px-2 py-1 rounded text-green-400">{ep}</code>
+                  ))}
+                </div>
+              </div>
+              <div className="shrink-0 flex flex-col gap-2 text-xs font-mono text-muted-foreground">
+                {["SimPEG 0.21", "Fatiando 0.7", "PyGIMLi 1.5", "FastAPI 0.111", "Numpy / Scipy"].map((d) => (
+                  <div key={d} className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    {d}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="mt-16 pt-8 border-t border-white/10 flex justify-between items-center text-sm">
           <span className="text-muted-foreground">Document ID: GEO-AI-01-INV</span>
           <Link to="/autonomous-robotics" className="text-geo-orange font-bold hover:underline">Next: Autonomous Robotics →</Link>
@@ -151,3 +273,4 @@ const AIInversion = () => {
 };
 
 export default AIInversion;
+

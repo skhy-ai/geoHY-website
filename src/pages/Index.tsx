@@ -345,7 +345,59 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Output Section */}
+      {/* Lithographic Simulator CTA Section */}
+      <section className="py-20 bg-geo-panel border-y border-white/10 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-orange-600/10 rounded-full blur-3xl" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Left: Text */}
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-widest mb-6">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                Free Explorer Access
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Run the Lithospheric Reactor Simulator
+              </h2>
+              <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
+                Click on any location across the US, Indonesia, or Japan to evaluate the geological hydrogen potential. Simulate CAPEX, OPEX, 30-year yield curves, and reservoir intervention strategies — all in your browser.
+              </p>
+              <div className="flex flex-wrap gap-3 mb-8">
+                {["🇺🇸 United States", "🇮🇩 Indonesia", "🇯🇵 Japan"].map((r) => (
+                  <span key={r} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-sm text-foreground/70 font-medium">{r}</span>
+                ))}
+              </div>
+              <Link
+                to="/signup"
+                className="inline-flex items-center gap-2 bg-geo-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(234,88,12,0.3)] hover:shadow-[0_0_40px_rgba(234,88,12,0.5)] hover:-translate-y-0.5"
+              >
+                <span className="text-xl">🗺️</span> Explore the Simulator
+              </Link>
+              <p className="mt-3 text-xs text-muted-foreground">Free account required. No credit card. Takes 30 seconds.</p>
+            </div>
+
+            {/* Right: Feature Grid */}
+            <div className="flex-1 grid grid-cols-2 gap-4 w-full max-w-md">
+              {[
+                { icon: "⛏️", title: "Drill Site Selection", desc: "Click any point on the geological map to evaluate a potential reactor site" },
+                { icon: "💰", title: "CAPEX / OPEX Model", desc: "Full 30-year financial breakdown including equipment, personnel and operations" },
+                { icon: "📈", title: "Yield Curve Engine", desc: "Year-by-year H₂ production curve with depletion physics and intervention simulation" },
+                { icon: "🔬", title: "Reservoir Interventions", desc: "Simulate bore reaming and new lateral drilling to reset depletion kinetics" },
+              ].map(({ icon, title, desc }) => (
+                <div key={title} className="bg-black/30 border border-white/10 hover:border-geo-orange/30 rounded-xl p-4 transition-colors">
+                  <div className="text-2xl mb-2">{icon}</div>
+                  <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+
       <section id="output" className="py-24 bg-[#080B14] relative overflow-hidden border-t border-white/10">
         <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-geo-orange/5 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
