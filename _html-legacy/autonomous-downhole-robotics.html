@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoHy Energy | Technical Report: Autonomous Downhole Robotics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Three.js & Dependencies for 3D Model -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { geo: { dark: '#0B0F19', panel: '#151C2C', blue: '#0EA5E9', orange: '#EA580C' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0B0F19; color: #E2E8F0; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        .glass-panel { background: rgba(21, 28, 44, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .text-gradient { background: linear-gradient(to right, #0EA5E9, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0F19; }
+        ::-webkit-scrollbar-thumb { background: #0EA5E9; border-radius: 4px; }
+        p { text-align: justify; line-height: 1.75; margin-bottom: 1.5rem; color: #9CA3AF; }
+        h2 { color: #F3F4F6; margin-top: 2rem; margin-bottom: 1rem; font-weight: 700; font-size: 1.5rem; }
+        h3 { color: #D1D5DB; margin-top: 1.5rem; margin-bottom: 0.75rem; font-weight: 600; font-size: 1.25rem; }
+
+        #robotics-sim-container { width: 100%; height: 500px; border-radius: 1rem; overflow: hidden; position: relative; border: 1px solid rgba(14, 165, 233, 0.3); }
+        .hud-overlay { position: absolute; pointer-events: none; z-index: 10; }
+
+        /* Block Diagram Styles */
+        .flow-node { background: rgba(21, 28, 44, 0.9); border: 1px solid rgba(14, 165, 233, 0.4); padding: 1.25rem; border-radius: 0.75rem; position: relative; flex: 1; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .flow-arrow-right { display: flex; align-items: center; justify-content: center; width: 40px; color: #0EA5E9; font-size: 1.5rem; }
+        
+        @media (max-width: 768px) {
+            .flow-container { flex-direction: column; }
+            .flow-arrow-right { width: 100%; height: 40px; transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-geo-blue selection:text-white">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel border-b-0 border-white/10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-20">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-hexagon text-3xl text-geo-orange"></i>
+                <a href="index.html" class="font-bold text-2xl tracking-tight text-white">GeoHy<span class="text-geo-orange">.</span></a>
+            </div>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="ai_geophysical_inversion.html" class="text-gray-400 hover:text-geo-blue transition-colors">Geophysical Inversion</a>
+                <a href="#" class="text-geo-blue">Autonomous Robotics</a>
+                <a href="plasma_lattice_drilling.html" class="text-gray-400 hover:text-geo-blue transition-colors">Plasma Drilling</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-24 max-w-4xl mx-auto px-6 lg:px-8">
+        <div class="mb-12 border-b border-white/10 pb-8">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-geo-blue/10 text-geo-blue text-xs font-bold uppercase tracking-widest mb-6 border border-geo-blue/30">
+                Technical Specification Document
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white mb-6">
+                Kinetic Restoration via <span class="text-gradient">Autonomous Downhole Robotic Systems</span>
+            </h1>
+            <p class="text-xl text-gray-300">Operational methodologies for mitigating diffusion barriers and managing dynamic thermodynamics in HPHT subterranean environments.</p>
+        </div>
+
+        <!-- 3D Autonomous Robotics Simulation -->
+        <section class="mb-16">
+            <div id="robotics-sim-container" class="bg-black shadow-[0_0_40px_rgba(14,165,233,0.15)] cursor-move">
+                <div class="hud-overlay top-4 left-4 glass-panel p-3 rounded text-xs font-mono w-64">
+                    <div class="text-geo-blue font-bold border-b border-white/10 pb-1 mb-2">EDGE INFERENCE: ACTIVE</div>
+                    <div class="flex justify-between gap-4 mb-1"><span class="text-gray-500">AMB TEMP:</span> <span class="text-red-400">274°C</span></div>
+                    <div class="flex justify-between gap-4 mb-1"><span class="text-gray-500">PRESSURE:</span> <span class="text-white">52.1 MPa</span></div>
+                    <div class="flex justify-between gap-4 mb-1"><span class="text-gray-500">IMPEDANCE:</span> <span class="text-green-400">Nominal</span></div>
+                    <div class="flex justify-between gap-4 mt-2 pt-2 border-t border-white/10">
+                        <span class="text-gray-500">RIND ABRASION:</span> <span class="text-orange-400 font-bold animate-pulse">5.2 cm</span>
+                    </div>
+                </div>
+                
+                <div class="hud-overlay bottom-4 right-4 text-[10px] text-gray-500 tracking-widest uppercase bg-black/50 px-2 py-1 rounded">
+                    Interactive Simulation: Drag to rotate
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>1. The Phenomenon of Kinetic Attenuation</h2>
+            <p>
+                The economic efficiency of the lithospheric reactor is predicated upon the maximization of horizontal subsurface contact area, typically achieved through the construction of an expansive lattice fracture network. However, the exothermic serpentinization reaction inherently precipitates the formation of an oxidized, depleted mineralogical boundary layer—referred to as the "rind"—along the circumference of the lateral boreholes. Over defined temporal operational periods, this rind functions as a severe chemical diffusion barrier. Consequently, the reaction kinetics associated with hydrogen generation and secondary Fischer-Tropsch Type (FTT) synthesis decay at an exponential rate.
+            </p>
+            <p>
+                To sustain baseload output parameters, aggressive mechanical intervention is mandated. The prescribed corrective measure involves mechanically reaming the lateral wellbores to abrade the accumulated 5 to 10-centimeter depleted boundary layer, thereby exposing pristine, reactive ferrous iron to the circulating supercritical fluids.
+            </p>
+
+            <h2>2. Environmental Constraints on Telemetry and Control</h2>
+            <p>
+                Executing mechanical interventions at depths exceeding 4.7 kilometers presents formidable engineering challenges. The subterranean environment is characterized by High-Pressure, High-Temperature (HPHT) extremes, routinely exceeding 270°C and 50 MPa. Standard Measurement-While-Drilling (MWD) and Logging-While-Drilling (LWD) electronic assemblies suffer catastrophic thermal failure under such parameters. Furthermore, the substantial latency and restricted bandwidth associated with mud-pulse telemetry or deep wireline communication render the precise, real-time control of delicate mechanical reaming across a 20-kilometer intersecting lattice mathematically and physically impractical.
+            </p>
+
+            <h2>3. Architectural Block Diagram: Edge-AI Logic Flow</h2>
+            <p>
+                To circumvent telemetry limitations, operations are delegated to autonomous downhole robotic units. These systems integrate advanced materials science with edge-computing artificial intelligence to execute mathematically scheduled kinetic restorations. The algorithmic logic sequence is detailed below.
+            </p>
+
+            <!-- Robotic Logic Flow Diagram -->
+            <div class="my-10 p-8 glass-panel rounded-2xl bg-black/40">
+                <div class="flex flow-container">
+                    <!-- Node 1: Sensor Data -->
+                    <div class="flow-node">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-6 h-6 rounded bg-gray-800 flex items-center justify-center border border-gray-600 text-xs font-bold text-white shrink-0">1</div>
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider">Data Acquisition</h4>
+                        </div>
+                        <ul class="text-xs text-gray-400 space-y-1 font-mono">
+                            <li><span class="text-blue-400">►</span> Acoustic Impedance</li>
+                            <li><span class="text-blue-400">►</span> BHT Thermocouples</li>
+                            <li><span class="text-blue-400">►</span> Pressure Transducers</li>
+                        </ul>
+                    </div>
+
+                    <div class="flow-arrow-right"><i class="ph-bold ph-caret-right"></i></div>
+
+                    <!-- Node 2: Edge Inference -->
+                    <div class="flow-node border-purple-500/40 bg-purple-900/10">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-6 h-6 rounded bg-gray-800 flex items-center justify-center border border-gray-600 text-xs font-bold text-white shrink-0">2</div>
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider">Edge AI Inference</h4>
+                        </div>
+                        <ul class="text-xs text-gray-400 space-y-1 font-mono">
+                            <li><span class="text-purple-400">►</span> Calculate Rind Thickness</li>
+                            <li><span class="text-purple-400">►</span> Verify HPHT Thresholds</li>
+                            <li><span class="text-purple-400">►</span> Establish Trajectory</li>
+                        </ul>
+                    </div>
+
+                    <div class="flow-arrow-right"><i class="ph-bold ph-caret-right"></i></div>
+
+                    <!-- Node 3: Actuation -->
+                    <div class="flow-node border-geo-orange/40 bg-orange-900/10">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-6 h-6 rounded bg-gray-800 flex items-center justify-center border border-gray-600 text-xs font-bold text-white shrink-0">3</div>
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider">Actuation & Control</h4>
+                        </div>
+                        <ul class="text-xs text-gray-400 space-y-1 font-mono">
+                            <li><span class="text-geo-orange">►</span> Modulate ROP / Torque</li>
+                            <li><span class="text-geo-orange">►</span> Engage Mechanical Reamer</li>
+                            <li><span class="text-geo-orange">►</span> Request Thermal Modulation</li>
+                        </ul>
+                    </div>
+
+                    <div class="flow-arrow-right"><i class="ph-bold ph-caret-right"></i></div>
+
+                    <!-- Node 4: Validation -->
+                    <div class="flow-node border-green-500/40 bg-green-900/10">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-6 h-6 rounded bg-gray-800 flex items-center justify-center border border-gray-600 text-xs font-bold text-white shrink-0">4</div>
+                            <h4 class="text-sm font-bold text-white uppercase tracking-wider">Validation Sync</h4>
+                        </div>
+                        <ul class="text-xs text-gray-400 space-y-1 font-mono">
+                            <li><span class="text-green-400">►</span> Post-Abrasion Scan</li>
+                            <li><span class="text-green-400">►</span> Confirm Kinetic Reset</li>
+                            <li><span class="text-green-400">►</span> Uplink Compressed Data</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <h2>4. Dynamic Thermal Regulation and Enthalpy Management</h2>
+            <p>
+                The phenomenon of localized heat generation during subterranean operations presents a critical thermodynamic challenge. The mechanical friction associated with drilling operations, the extreme thermal output of plasma spallation, and the highly exothermic nature of the serpentinization reaction itself contribute massive quantities of supplementary enthalpy to the ambient geothermal gradient. If unmanaged, the localized Bottom-Hole Temperature (BHT) will rapidly exceed the 300°C threshold, thereby shifting the thermodynamic equilibrium away from Fischer-Tropsch Type (FTT) synthesis and precipitating catalyst degradation.
+            </p>
+            <p>
+                To address this, the autonomous systems rely on <strong>Dynamic Thermal Regulation</strong>. The injected aqueous solution (the supercritical $H_2O$ and $CO_2$ mixture) is utilized not merely as a chemical reactant, but as an actively modulated heat sink. By utilizing high-frequency thermocouple data acquired during Step 1 of the logic flow, the edge-computing processors dynamically command surface pumps to adjust the mass flow rate of the circulating fluid. 
+            </p>
+            <p>
+                Increasing the injection velocity facilitates the rapid absorption and vertical displacement of excess localized heat, transporting it to the surface where it is dissipated or harvested via organic Rankine cycle (ORC) heat exchangers. This precise mass flow calibration ensures the reaction zone remains permanently stabilized within the optimal 250°C to 270°C parameters, preventing localized thermal runaway.
+            </p>
+
+            <h2>5. Economic Implications of Autonomy</h2>
+            <p>
+                Mathematical modeling indicates that the deployment of autonomous mechanical reaming at scheduled intervals significantly optimizes the lifecycle economics of the facility. The ability to restore peak reaction kinetics independently of heavy surface rig mobilization contributes to an estimated 15% reduction in the Levelized Cost of Energy (LCOE) over a standard 30-year operational period.
+            </p>
+        </section>
+
+        <div class="mt-16 pt-8 border-t border-white/10 flex justify-between items-center text-sm">
+            <a href="ai_geophysical_inversion.html" class="text-geo-blue font-bold hover:underline">&larr; Previous: Geophysical Inversion</a>
+            <a href="plasma_lattice_drilling.html" class="text-geo-blue font-bold hover:underline">Next: Plasma Drilling &rarr;</a>
+        </div>
+    </main>
+
+    <!-- Three.js Autonomous Robotics Simulation Script -->
+    <script>
+        const container = document.getElementById('robotics-sim-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2('#000000', 0.05);
+
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 10);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 8;
+        controls.target.set(0, 0, 0);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+        
+        const headLight = new THREE.PointLight(0xffffff, 1.5, 30);
+        headLight.position.set(0, 0, 2);
+        scene.add(headLight);
+
+        const heatLight = new THREE.PointLight(0xEA580C, 1, 50);
+        heatLight.position.set(0, 0, -20);
+        scene.add(heatLight);
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const tunnelRadius = 4;
+        const rockMat = new THREE.MeshStandardMaterial({ color: 0x2d3748, roughness: 1.0, metalness: 0.1, side: THREE.BackSide });
+        const tunnel = new THREE.Mesh(new THREE.CylinderGeometry(tunnelRadius, tunnelRadius, 60, 32), rockMat);
+        tunnel.rotation.x = Math.PI / 2;
+        group.add(tunnel);
+
+        const wireframeMat = new THREE.MeshBasicMaterial({ color: 0x475569, wireframe: true, transparent: true, opacity: 0.2 });
+        const tunnelWireframe = new THREE.Mesh(new THREE.CylinderGeometry(tunnelRadius-0.05, tunnelRadius-0.05, 60, 16, 20), wireframeMat);
+        tunnelWireframe.rotation.x = Math.PI / 2;
+        group.add(tunnelWireframe);
+
+        const robotGroup = new THREE.Group();
+        group.add(robotGroup);
+
+        const craMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.8, roughness: 0.4 });
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, metalness: 0.9, roughness: 0.2 });
+        
+        const chassis = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 5, 16), craMat);
+        chassis.rotation.x = Math.PI / 2;
+        robotGroup.add(chassis);
+
+        const ledMat = new THREE.MeshBasicMaterial({ color: 0x0EA5E9 });
+        const sensorRing1 = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.05, 16, 32), ledMat);
+        sensorRing1.position.z = 1.5;
+        robotGroup.add(sensorRing1);
+
+        const sensorRing2 = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.05, 16, 32), ledMat);
+        sensorRing2.position.z = -1.5;
+        robotGroup.add(sensorRing2);
+
+        const padMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.4, roughness: 0.9 });
+        for(let i = 0; i < 4; i++) {
+            const legGroup = new THREE.Group();
+            const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8), metalMat);
+            arm.position.y = 1.25;
+            legGroup.add(arm);
+            
+            const pad = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.2, 3), padMat);
+            pad.position.y = 2.5;
+            legGroup.add(pad);
+
+            legGroup.rotation.z = (Math.PI / 2) * i;
+            legGroup.scale.setScalar(1.4); 
+            robotGroup.add(legGroup);
+        }
+
+        const reamerGroup = new THREE.Group();
+        reamerGroup.position.z = -3;
+        robotGroup.add(reamerGroup);
+
+        const reamerBase = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.8, 1.5, 16), metalMat);
+        reamerBase.rotation.x = Math.PI / 2;
+        reamerGroup.add(reamerBase);
+
+        const toothMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.5, roughness: 0.9 });
+        for(let i = 0; i < 12; i++) {
+            const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.4), toothMat);
+            tooth.position.set(Math.cos(i*Math.PI/6)*1.9, Math.sin(i*Math.PI/6)*1.9, -0.6);
+            tooth.rotation.z = i*Math.PI/6;
+            tooth.rotation.x = 0.2;
+            reamerGroup.add(tooth);
+        }
+
+        const particlesCount = 300;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particlesCount * 3);
+        const particleVelocities = [];
+
+        for(let i = 0; i < particlesCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = 2.0; 
+            particlePositions[i*3] = Math.cos(angle) * r;
+            particlePositions[i*3+1] = Math.sin(angle) * r;
+            particlePositions[i*3+2] = -3.5;
+
+            particleVelocities.push({
+                x: Math.cos(angle) * (Math.random() * 0.1),
+                y: Math.sin(angle) * (Math.random() * 0.1),
+                z: Math.random() * 0.4 + 0.1 
+            });
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        
+        const particleMaterial = new THREE.PointsMaterial({ 
+            color: 0xEA580C, size: 0.15, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending
+        });
+        
+        const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
+        robotGroup.add(particleSystem);
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            reamerGroup.rotation.z += 0.1;
+            robotGroup.position.z -= 0.01;
+            headLight.position.z = robotGroup.position.z + 2;
+
+            const positions = particleSystem.geometry.attributes.position.array;
+            for(let i = 0; i < particlesCount; i++) {
+                positions[i*3] += particleVelocities[i].x;
+                positions[i*3+1] += particleVelocities[i].y;
+                positions[i*3+2] += particleVelocities[i].z;
+
+                if(positions[i*3+2] > 5) {
+                    const angle = Math.random() * Math.PI * 2;
+                    positions[i*3] = Math.cos(angle) * 2.0;
+                    positions[i*3+1] = Math.sin(angle) * 2.0;
+                    positions[i*3+2] = -3.5;
+                }
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+</body>
+</html>

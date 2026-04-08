@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoHy Energy | The Lithospheric Reactor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Three.js & Dependencies for 3D Model -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        geo: {
+                            dark: '#0B0F19',
+                            panel: '#151C2C',
+                            orange: '#EA580C',
+                            glow: '#F97316',
+                            blue: '#0EA5E9'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Segoe UI', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0B0F19; color: #E2E8F0; overflow-x: hidden; }
+        
+        /* 3D Container */
+        #reactor-canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        
+        .glass-panel {
+            background: rgba(21, 28, 44, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #F97316, #FBBF24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0F19; }
+        ::-webkit-scrollbar-thumb { background: #EA580C; border-radius: 4px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-geo-orange selection:text-white">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-panel border-b-0 border-white/10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <i class="ph-fill ph-hexagon text-3xl text-geo-orange"></i>
+                    <span class="font-bold text-2xl tracking-tight text-white">GeoHy<span class="text-geo-orange">.</span></span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#vision" class="hover:text-geo-orange transition-colors text-sm font-medium">Vision</a>
+                        <a href="#reactor-3d" class="hover:text-geo-orange transition-colors text-sm font-medium">The Reactor</a>
+                        <a href="#co-generation" class="hover:text-geo-orange transition-colors text-sm font-medium">Co-Generation</a>
+                        <a href="#ai-innovation" class="hover:text-geo-orange transition-colors text-sm font-medium">AI & Robotics</a>
+                        <a href="#output" class="hover:text-geo-orange transition-colors text-sm font-medium">Products</a>
+                    </div>
+                </div>
+                <div>
+                    <a href="#contact" class="bg-geo-orange hover:bg-orange-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(234,88,12,0.4)] transition-all">
+                        Invest in Orange
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="vision" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] opacity-50 z-0"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-geo-orange/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-geo-orange/30 bg-geo-orange/10 text-geo-orange text-xs font-bold uppercase tracking-widest mb-8">
+                <span class="w-2 h-2 rounded-full bg-geo-orange animate-pulse"></span>
+                The Future of Baseload Energy
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight">
+                Engineering the Earth into an <br class="hidden lg:block"/>
+                <span class="text-gradient">Underground Abiotic Refinery.</span>
+            </h1>
+            <p class="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-gray-400 mb-10 leading-relaxed">
+                GeoHy is pioneering Orange Hydrogen. We don't just extract finite resources—we manufacture continuous, high-density carbon-negative fuels directly inside the lithosphere using AI-driven reaction kinetics and advanced lattice structures.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#reactor-3d" class="bg-white text-geo-dark px-8 py-3.5 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-cube"></i> Explore the 3D Reactor
+                </a>
+                <a href="#ai-innovation" class="border border-white/20 bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-lg font-bold transition-colors flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-cpu"></i> View AI Tech Stack
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D Interactive Reactor Section -->
+    <section id="reactor-3d" class="relative w-full h-[100vh] min-h-[800px] bg-black border-y border-white/10">
+        <!-- ThreeJS Canvas -->
+        <div id="reactor-canvas-container"></div>
+        
+        <!-- UI Overlay -->
+        <div class="absolute inset-0 pointer-events-none p-6 lg:p-12 flex flex-col justify-between z-10">
+            
+            <!-- Top Bar -->
+            <div class="glass-panel p-4 rounded-xl max-w-md pointer-events-auto">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="ph-fill ph-planet text-geo-orange"></i>
+                    Lithospheric Reactor
+                </h2>
+                <p class="text-sm text-gray-400 mt-2" id="tour-desc">
+                    Explore our engineered closed-loop architecture featuring the high-volume lattice network and surface processing plant. Drag to rotate, scroll to zoom. Use the guided tour below.
+                </p>
+            </div>
+
+            <!-- Bottom Controls & Tour -->
+            <div class="flex flex-col lg:flex-row gap-6 items-end">
+                <!-- Tour Steps -->
+                <div class="glass-panel p-4 rounded-xl flex-1 w-full lg:max-w-4xl pointer-events-auto">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider">Guided Simulation Tour</h3>
+                        <span id="tour-timer" class="text-xs font-mono text-geo-orange">READY</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+                        <button onclick="startTour(0)" class="tour-btn bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-geo-blue">1. Injection Mix</button>
+                        <button onclick="startTour(1)" class="tour-btn bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-red-500">2. Synthesis Lattice</button>
+                        <button onclick="startTour(2)" class="tour-btn bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-[#EA580C]">3. Heat Exchanger</button>
+                        <button onclick="startTour(3)" class="tour-btn bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-yellow-500">4. Separation & Storage</button>
+                        <button onclick="startTour(4)" class="tour-btn bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-purple-500">5. Co-Gen Turbines</button>
+                    </div>
+
+                    <div class="w-full bg-black/50 h-1.5 rounded-full overflow-hidden">
+                        <div id="tour-progress" class="h-full bg-gradient-to-r from-geo-orange to-yellow-400 w-0 transition-all duration-[4000ms] ease-linear"></div>
+                    </div>
+                </div>
+
+                <!-- Live Telemetry & Legend -->
+                <div class="glass-panel p-4 rounded-xl w-full lg:w-64 pointer-events-auto hidden md:block shrink-0">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-white/10 pb-2">Target Telemetry</h3>
+                    <div class="space-y-2 text-sm font-mono">
+                        <div class="flex justify-between"><span class="text-gray-500">Depth:</span> <span class="text-white">2.7-7.5km</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Temp:</span> <span class="text-red-400">230-270°C</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Pressure:</span> <span class="text-blue-400">38-60 MPa</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Geometry:</span> <span class="text-geo-orange">Lattice</span></div>
+                    </div>
+                    
+                    <!-- Process Legend -->
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Particle Streams</h4>
+                        <div class="space-y-2 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#A855F7]"></span> 
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#0EA5E9]"></span>
+                                <span class="text-gray-300">CO₂ + H₂O Mix <span class="text-[10px] text-gray-500">(Down)</span></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#EF4444] animate-pulse shadow-[0_0_8px_#EF4444]"></span> 
+                                <span class="text-gray-300">Exothermic FTT <span class="text-[10px] text-gray-500">(Lattice)</span></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#FBBF24]"></span>
+                                <span class="text-gray-300">Liquid Hydrocarbons <span class="text-[10px] text-gray-500">(Up)</span></span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#22D3EE]"></span> 
+                                <span class="text-gray-300">Hy10 Gas <span class="text-[10px] text-gray-500">(Up)</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Exothermic Co-Generation Section -->
+    <section id="co-generation" class="py-24 bg-geo-panel border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="mb-16 text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 mb-4">
+                    <i class="ph-fill ph-arrows-merge text-2xl"></i>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Exothermic Co-Generation</h2>
+                <p class="text-gray-400 max-w-3xl mx-auto text-lg">
+                    Serpentinization is a violently exothermic reaction. By routing the returning supercritical fluids through surface heat exchangers, we strip the thermal energy ($\Delta H$) before separation, driving Organic Rankine Cycle (ORC) turbines to power the entire site.
+                </p>
+            </div>
+
+            <!-- Architectural Flow Diagram -->
+            <div class="relative max-w-5xl mx-auto bg-geo-dark rounded-2xl p-8 lg:p-12 border border-white/10 shadow-2xl overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+                
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                    
+                    <!-- Step 1: Reactor Core -->
+                    <div class="text-center w-full md:w-1/3 relative group">
+                        <div class="w-24 h-24 mx-auto bg-red-500/10 border border-red-500/30 group-hover:border-red-500/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(239,68,68,0.1)] group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                            <i class="ph-fill ph-fire text-4xl text-red-500 animate-pulse"></i>
+                        </div>
+                        <h4 class="font-bold text-white text-lg mb-2">1. Downhole Exothermic Heat</h4>
+                        <p class="text-sm text-gray-400">High-volume rock hydration releases extreme thermal energy (>270°C) into the returning extraction fluid mixture.</p>
+                    </div>
+
+                    <!-- Flow Arrow -->
+                    <div class="hidden md:flex text-gray-600"><i class="ph-bold ph-arrow-right text-4xl"></i></div>
+                    <div class="md:hidden text-gray-600"><i class="ph-bold ph-arrow-down text-4xl"></i></div>
+
+                    <!-- Step 2: Heat Exchangers -->
+                    <div class="text-center w-full md:w-1/3 relative group">
+                        <div class="w-24 h-24 mx-auto bg-geo-orange/10 border border-geo-orange/30 group-hover:border-geo-orange/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(234,88,12,0.1)] group-hover:shadow-[0_0_30px_rgba(234,88,12,0.3)]">
+                            <i class="ph-fill ph-thermometer-hot text-4xl text-geo-orange"></i>
+                        </div>
+                        <h4 class="font-bold text-white text-lg mb-2">2. Surface Heat Exchange</h4>
+                        <p class="text-sm text-gray-400">Fluids pass through the primary HX unit, stripping the heat into a closed-loop secondary working fluid before chemical separation.</p>
+                    </div>
+
+                    <!-- Flow Arrow -->
+                    <div class="hidden md:flex text-gray-600"><i class="ph-bold ph-arrow-right text-4xl"></i></div>
+                    <div class="md:hidden text-gray-600"><i class="ph-bold ph-arrow-down text-4xl"></i></div>
+
+                    <!-- Step 3: ORC Generation -->
+                    <div class="text-center w-full md:w-1/3 relative group">
+                        <div class="w-24 h-24 mx-auto bg-purple-500/10 border border-purple-500/30 group-hover:border-purple-500/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                            <i class="ph-fill ph-lightning text-4xl text-purple-400"></i>
+                        </div>
+                        <h4 class="font-bold text-white text-lg mb-2">3. ORC Turbines</h4>
+                        <p class="text-sm text-gray-400">Organic Rankine Cycle turbines convert the heat into zero-emission electricity to power AI robotics and compression systems.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI & Innovation Section -->
+    <section id="ai-innovation" class="py-24 bg-geo-dark">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Pioneering with AI & Robotics</h2>
+                <p class="text-gray-400 max-w-3xl text-lg">
+                    The realization of the Lithospheric Reactor is contingent upon resolving substantial geochemical and engineering challenges. GeoHy utilizes an advanced AI technology stack to mitigate HPHT (High-Pressure, High-Temperature) risks and map expansive lattice structures.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-geo-orange/50 transition-colors group">
+                    <div class="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-radar text-3xl text-geo-orange"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">AI Geophysical Inversion</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        To avoid the "Serpentinite Trap" (drilling into spent, oxidized rock), our neural networks process massive seismic and gravimetric datasets to identify pristine olivine. 
+                    </p>
+                    <ul class="text-xs font-mono text-gray-500 space-y-2 border-t border-white/10 pt-4">
+                        <li><span class="text-green-400">Target Vp:</span> > 8.0 km/s (Fresh Olivine)</li>
+                        <li><span class="text-blue-400">Target Density:</span> > 3.2 g/cm³</li>
+                        <li><span class="text-purple-400">Avoid Vp:</span> < 5.5 km/s (Altered)</li>
+                    </ul>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-geo-orange/50 transition-colors group">
+                    <div class="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-robot text-3xl text-geo-orange"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Autonomous Downhole Robotics</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        Serpentinization creates a depleted "rind" acting as a severe diffusion barrier within the lattice. We deploy AI-driven robotics capable of operating at 270°C to ream the wellbore.
+                    </p>
+                    <ul class="text-xs font-mono text-gray-500 space-y-2 border-t border-white/10 pt-4">
+                        <li><span class="text-geo-orange">Action:</span> Scheduled Mechanical Reaming</li>
+                        <li><span class="text-geo-orange">Effect:</span> Removes 5-10cm depleted layer</li>
+                        <li><span class="text-geo-orange">Result:</span> Resets ODE reaction kinetics to Year 0</li>
+                    </ul>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-panel p-8 rounded-2xl hover:border-geo-orange/50 transition-colors group">
+                    <div class="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-lightning text-3xl text-geo-orange"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Plasma Lattice Drilling</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        Conventional mechanical rotary bits exhibit unacceptable wear in ultra-hard ultramafic lithologies. We utilize next-generation contactless directed-energy plasma drilling to achieve extensive horizontal lattice expansion.
+                    </p>
+                    <ul class="text-xs font-mono text-gray-500 space-y-2 border-t border-white/10 pt-4">
+                        <li><span class="text-red-400">Constraint:</span> Extreme HPHT environment</li>
+                        <li><span class="text-red-400">Material:</span> High-nickel CRAs</li>
+                        <li><span class="text-red-400">Geometry:</span> Intersecting Lattice Grid</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Output Section -->
+    <section id="output" class="py-24 bg-[#080B14] relative overflow-hidden border-t border-white/10">
+        <div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-geo-orange/5 to-transparent pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">The Golden Zone Refinery</h2>
+                    <p class="text-gray-400 text-lg mb-6 leading-relaxed">
+                        By targeting depths of 4 to 5 kilometers, we reach extreme hydrostatic pressures (50-80 MPa). The injected $H_2O$ and $CO_2$ transition into a fiercely supercritical state with near-zero surface tension.
+                    </p>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        At <strong>270°C</strong>, the natural Awaruite ($Ni_3Fe$) and Magnetite catalysts trigger Fischer-Tropsch Type (FTT) synthesis. We don't just extract gas; we manufacture high-density fuels.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center shrink-0 border border-green-500/30">
+                                <i class="ph-bold ph-leaf text-xl text-green-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg">Solid Carbon Mineralization</h4>
+                                <p class="text-sm text-gray-400 mt-1">Supercritical $CO_2$ reacts with magnesium to form solid Magnesite ($MgCO_3$), ensuring verifiable, permanent carbon-negative operation.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0 border border-cyan-500/30">
+                                <i class="ph-bold ph-gas-pump text-xl text-cyan-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg">Hy10 Baseload Gas</h4>
+                                <p class="text-sm text-gray-400 mt-1">A synthetic blend of 10% Hydrogen and 90% Methane. Safely transportable via existing midstream pipelines, burning cleaner in standard gas turbines.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0 border border-yellow-500/30">
+                                <i class="ph-bold ph-drop text-xl text-yellow-500"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-bold text-lg">Abiotic Liquid Hydrocarbons</h4>
+                                <p class="text-sm text-gray-400 mt-1">Secondary cracking produces stable Paraffins and energy-dense Aromatics (C4 to C12) providing the high-thrust energy requisite for aviation and heavy industry.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative rounded-2xl overflow-hidden border border-white/10 glass-panel p-8">
+                    <h3 class="text-xl font-bold text-white mb-6 border-b border-white/10 pb-4">Thermodynamic Stoichiometry</h3>
+                    
+                    <div class="space-y-6 font-mono text-sm">
+                        <div>
+                            <div class="text-geo-orange mb-2 text-xs uppercase tracking-widest font-bold">1. Hydration & H2 Release</div>
+                            <div class="bg-black/50 p-4 rounded border border-white/5 text-gray-300">
+                                <span class="text-gray-500">3Fe₂SiO₄ + 2H₂O →</span><br/>
+                                <span class="text-white">2Fe₃O₄ + 3SiO₂ + 2H₂ + Heat</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="text-blue-400 mb-2 text-xs uppercase tracking-widest font-bold">2. Carbon Sequestration</div>
+                            <div class="bg-black/50 p-4 rounded border border-white/5 text-gray-300">
+                                <span class="text-gray-500">Mg₂SiO₄ + 2CO₂ →</span><br/>
+                                <span class="text-white">2MgCO₃ (Magnesite) + SiO₂</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="text-yellow-500 mb-2 text-xs uppercase tracking-widest font-bold">3. FTT Synthesis (Abiotic Fuel)</div>
+                            <div class="bg-black/50 p-4 rounded border border-white/5 text-gray-300">
+                                <span class="text-gray-500">CO₂ + 4H₂ →</span><br/>
+                                <span class="text-white">CH₄ + 2H₂O</span>
+                                <div class="mt-2 text-xs text-gray-500 italic">Catalyzed natively by Awaruite (Ni₃Fe)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <i class="ph-fill ph-hexagon text-2xl text-geo-orange"></i>
+                <span class="font-bold text-xl tracking-tight text-white">GeoHy<span class="text-geo-orange">.</span></span>
+            </div>
+            <div class="text-gray-500 text-sm text-center md:text-left">
+                © 2026 GeoHy Energy Systems. Engineering the Lithosphere.
+            </div>
+            <div class="flex gap-4">
+                <a href="#" class="text-gray-500 hover:text-white transition-colors"><i class="ph-fill ph-twitter-logo text-xl"></i></a>
+                <a href="#" class="text-gray-500 hover:text-white transition-colors"><i class="ph-fill ph-linkedin-logo text-xl"></i></a>
+                <a href="#" class="text-gray-500 hover:text-white transition-colors"><i class="ph-fill ph-envelope text-xl"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Three.js Logic for Lithospheric Reactor -->
+    <script>
+        // === Scene Setup ===
+        const container = document.getElementById('reactor-canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#0B0F19');
+        scene.fog = new THREE.FogExp2('#0B0F19', 0.002);
+
+        const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2 + 0.1; 
+        
+        // === Lighting ===
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        scene.add(dirLight);
+
+        const coreLight = new THREE.PointLight(0xEA580C, 2, 200);
+        coreLight.position.set(0, -90, 0);
+        scene.add(coreLight);
+
+        // === Geometries & Materials ===
+        const group = new THREE.Group();
+        scene.add(group);
+
+        // Materials
+        const metalMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.3 });
+        const glassWater = new THREE.MeshStandardMaterial({ color: 0x0EA5E9, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 });
+        const glassCO2 = new THREE.MeshStandardMaterial({ color: 0xA855F7, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 });
+        const glassHy10 = new THREE.MeshStandardMaterial({ color: 0x22D3EE, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 });
+        const glassHC = new THREE.MeshStandardMaterial({ color: 0xFBBF24, transparent: true, opacity: 0.4, metalness: 0.1, roughness: 0.1 });
+        const hxMat = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x9A3412, metalness: 0.8, roughness: 0.4 });
+        const orcMat = new THREE.MeshStandardMaterial({ color: 0x4C1D95, metalness: 0.8, roughness: 0.2 });
+
+        // Base pad
+        const pad = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 1, 64), new THREE.MeshStandardMaterial({ color: 0x1E293B }));
+        pad.position.y = 0;
+        group.add(pad);
+
+        // 1. SURFACE PLANT ARCHITECTURE
+
+        // Wellhead
+        const wellhead = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 3, 16), metalMat);
+        wellhead.position.set(0, 1.5, 0);
+        group.add(wellhead);
+
+        // Supply Tanks (Injection)
+        const waterSupply = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 8, 32), glassWater);
+        waterSupply.position.set(-12, 4, 8);
+        group.add(waterSupply);
+        const waterInner = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 7, 32), new THREE.MeshBasicMaterial({color: 0x0EA5E9}));
+        waterInner.position.set(-12, 3.5, 8);
+        group.add(waterInner);
+
+        const co2Supply = new THREE.Mesh(new THREE.SphereGeometry(4, 32, 32), glassCO2);
+        co2Supply.position.set(-12, 4, -8);
+        group.add(co2Supply);
+        const co2Inner = new THREE.Mesh(new THREE.SphereGeometry(3.8, 32, 32), new THREE.MeshBasicMaterial({color: 0xA855F7}));
+        co2Inner.position.set(-12, 4, -8);
+        group.add(co2Inner);
+
+        // Processing (Heat Exchanger & ORC)
+        const hxUnit = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 8), hxMat);
+        hxUnit.position.set(8, 2, 0);
+        group.add(hxUnit);
+
+        // Advanced ORC Turbine Model
+        const orcTurbineGroup = new THREE.Group();
+        orcTurbineGroup.position.set(8, 2.2, -10);
+
+        const turbineBase = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 3), new THREE.MeshStandardMaterial({color: 0x333333}));
+        turbineBase.position.set(0, -1.6, 0);
+        orcTurbineGroup.add(turbineBase);
+
+        const housingMat = new THREE.MeshStandardMaterial({ color: 0x4C1D95, metalness: 0.6, roughness: 0.4, transparent: true, opacity: 0.3, side: THREE.DoubleSide });
+        const housing = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 6, 32), housingMat);
+        housing.rotation.z = Math.PI / 2;
+        orcTurbineGroup.add(housing);
+
+        const capGeo = new THREE.RingGeometry(0.5, 2.2, 32);
+        const cap1 = new THREE.Mesh(capGeo, orcMat);
+        cap1.rotation.y = Math.PI / 2;
+        cap1.position.x = 3;
+        orcTurbineGroup.add(cap1);
+        
+        const cap2 = new THREE.Mesh(capGeo, orcMat);
+        cap2.rotation.y = Math.PI / 2;
+        cap2.position.x = -3;
+        orcTurbineGroup.add(cap2);
+
+        let orcRotor = new THREE.Group();
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 6.5, 16), metalMat);
+        orcRotor.add(shaft);
+
+        const bladeGeo = new THREE.BoxGeometry(0.4, 1.6, 0.05);
+        bladeGeo.translate(0, 1.0, 0); 
+        const bladeMat = new THREE.MeshStandardMaterial({ color: 0x94A3B8, metalness: 0.8, roughness: 0.2 });
+        
+        for (let s = 0; s < 4; s++) {
+            const stageY = -2.2 + s * 1.46; 
+            for (let i = 0; i < 12; i++) {
+                const blade = new THREE.Mesh(bladeGeo, bladeMat);
+                blade.position.y = stageY;
+                blade.rotation.y = (i * Math.PI * 2) / 12;
+                blade.rotation.x = Math.PI / 6; 
+                orcRotor.add(blade);
+            }
+        }
+        
+        orcRotor.rotation.z = Math.PI / 2;
+        orcTurbineGroup.add(orcRotor);
+        group.add(orcTurbineGroup);
+
+        // Separation & Storage (Extraction)
+        const separator = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 14, 32), metalMat);
+        separator.position.set(16, 7, 0);
+        group.add(separator);
+
+        const hy10Storage = new THREE.Mesh(new THREE.SphereGeometry(3.5, 32, 32), glassHy10);
+        hy10Storage.position.set(24, 3.5, 8);
+        group.add(hy10Storage);
+        const hy10Inner = new THREE.Mesh(new THREE.SphereGeometry(3.3, 32, 32), new THREE.MeshBasicMaterial({color: 0x22D3EE}));
+        hy10Inner.position.set(24, 3.5, 8);
+        group.add(hy10Inner);
+
+        const hcStorage = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 10, 32), glassHC);
+        hcStorage.rotation.x = Math.PI / 2;
+        hcStorage.position.set(24, 3, -8);
+        group.add(hcStorage);
+        const hcInner = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 2.8, 9.8, 32), new THREE.MeshBasicMaterial({color: 0xFBBF24}));
+        hcInner.rotation.x = Math.PI / 2;
+        hcInner.position.set(24, 3, -8);
+        group.add(hcInner);
+
+        // Surface Piping (Visual representation)
+        const pipeMat = new THREE.LineBasicMaterial({ color: 0x94A3B8, linewidth: 2 });
+        function addPipe(p1, p2) {
+            const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(p1.x, p1.y, p1.z), new THREE.Vector3(p2.x, p2.y, p2.z)]);
+            group.add(new THREE.Line(geo, pipeMat));
+        }
+        
+        const P_WH = {x:0,y:2,z:0}, P_H2O = {x:-12,y:2,z:8}, P_CO2 = {x:-12,y:2,z:-8};
+        const P_HX = {x:8,y:2,z:0}, P_SEP = {x:16,y:2,z:0}, P_ORC = {x:8,y:2,z:-10};
+        const P_HY10 = {x:24,y:2,z:8}, P_HC = {x:24,y:2,z:-8};
+        
+        addPipe(P_H2O, P_WH); addPipe(P_CO2, P_WH);
+        addPipe(P_WH, P_HX); addPipe(P_HX, P_SEP); addPipe(P_HX, P_ORC);
+        addPipe(P_SEP, P_HY10); addPipe(P_SEP, P_HC);
+
+        // Derrick
+        const derrickMat = new THREE.LineBasicMaterial({ color: 0xF97316 });
+        const derrickGeo = new THREE.EdgesGeometry(new THREE.CylinderGeometry(0.5, 3, 16, 4));
+        const derrick = new THREE.LineSegments(derrickGeo, derrickMat);
+        derrick.position.set(0, 8, 0);
+        group.add(derrick);
+
+        // 2. Earth Crust Layers
+        const crustMat1 = new THREE.MeshBasicMaterial({ color: 0x1E293B, wireframe: true, transparent: true, opacity: 0.15 });
+        const crust1 = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 40, 16), crustMat1);
+        crust1.position.y = -20;
+        group.add(crust1);
+
+        const crustMat2 = new THREE.MeshBasicMaterial({ color: 0xEA580C, wireframe: true, transparent: true, opacity: 0.08 });
+        const crust2 = new THREE.Mesh(new THREE.CylinderGeometry(30, 30, 40, 16), crustMat2);
+        crust2.position.y = -60;
+        group.add(crust2);
+
+        // 3. Vertical Wellbore
+        const pipeOuterMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.6 });
+        const verticalBore = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 80, 16), pipeOuterMat);
+        verticalBore.position.y = -40;
+        group.add(verticalBore);
+
+        // 4. Horizontal LATTICE Network (The Reactor Zone)
+        const lateralMat = new THREE.MeshStandardMaterial({ color: 0xEA580C, metalness: 0.5, roughness: 0.5, emissive: 0x7C2D12 });
+        const lateralGroup = new THREE.Group();
+        lateralGroup.position.y = -78;
+
+        const mainLateral = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 40, 16), lateralMat);
+        mainLateral.rotation.x = Math.PI / 2;
+        lateralGroup.add(mainLateral);
+
+        const side1 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 40, 16), lateralMat);
+        side1.rotation.x = Math.PI / 2; side1.position.set(10, 0, 0); lateralGroup.add(side1);
+        const side2 = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 40, 16), lateralMat);
+        side2.rotation.x = Math.PI / 2; side2.position.set(-10, 0, 0); lateralGroup.add(side2);
+
+        for(let i = -15; i <= 15; i += 5) {
+            const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 20, 16), lateralMat);
+            branch.rotation.z = Math.PI / 2; branch.position.set(0, 0, i); lateralGroup.add(branch);
+        }
+        group.add(lateralGroup);
+
+        // 5. Advanced Particle System (Visualizing the full cycle)
+        const particlesCount = 800;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particlesCount * 3);
+        const particleColors = new Float32Array(particlesCount * 3);
+        const particleData = [];
+
+        const colors = {
+            "water_down": new THREE.Color(0x0EA5E9),
+            "co2_down": new THREE.Color(0xA855F7),
+            "react": new THREE.Color(0xEF4444),
+            "hc": new THREE.Color(0xFBBF24),
+            "hy10": new THREE.Color(0x22D3EE),
+            "water_up": new THREE.Color(0x3B82F6)
+        };
+
+        // Distribute initial particles across different states to avoid clumping
+        const states = ["surf_inject", "bore_down", "lattice", "bore_up", "surf_hx", "surf_sep", "surf_store"];
+        
+        for(let i = 0; i < particlesCount; i++) {
+            const initState = states[Math.floor(Math.random() * states.length)];
+            let pType = Math.random();
+            
+            particleData.push({
+                state: initState,
+                type: pType,
+                product: "",
+                speed: 0.3 + Math.random() * 0.3,
+                latticeLife: Math.random() * 80,
+                angle: Math.random() * Math.PI * 2,
+                radius: Math.random() * 0.6,
+                latDirX: 0, latDirZ: 0
+            });
+            
+            particlePositions[i*3] = 0;
+            particlePositions[i*3+1] = Math.random() * -78; // General scatter
+            particlePositions[i*3+2] = 0;
+            
+            updateParticleColor(i, initState, pType, "");
+        }
+
+        function updateParticleColor(i, state, type, product) {
+            let c = colors.water_down;
+            if(state === "surf_inject" || state === "bore_down") c = type > 0.5 ? colors.water_down : colors.co2_down;
+            else if(state === "lattice") c = colors.react;
+            else {
+                if(product === "hc") c = colors.hc;
+                else if(product === "hy10") c = colors.hy10;
+                else c = colors.water_up;
+            }
+            particleColors[i*3] = c.r;
+            particleColors[i*3+1] = c.g;
+            particleColors[i*3+2] = c.b;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.8, vertexColors: true, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
+        });
+
+        const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
+        group.add(particleSystem);
+
+        function moveTowards(cx, cy, cz, target, speed) {
+            const dx = target.x - cx, dy = target.y - cy, dz = target.z - cz;
+            const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (dist < speed) return {x: target.x, y: target.y, z: target.z, reached: true};
+            return { x: cx + (dx/dist)*speed, y: cy + (dy/dist)*speed, z: cz + (dz/dist)*speed, reached: false };
+        }
+
+        // === Initial Camera Setup ===
+        camera.position.set(40, 20, 60);
+        controls.target.set(0, -10, 0);
+
+        // === Animation Loop ===
+        function animate(time) {
+            requestAnimationFrame(animate);
+            TWEEN.update(time);
+            
+            const positions = particleSystem.geometry.attributes.position.array;
+            
+            for(let i = 0; i < particlesCount; i++) {
+                let x = positions[i*3], y = positions[i*3+1], z = positions[i*3+2];
+                const d = particleData[i];
+                
+                if (d.state === "bore_down") {
+                    y -= d.speed;
+                    d.angle += 0.05;
+                    x = Math.cos(d.angle) * d.radius; z = Math.sin(d.angle) * d.radius;
+                    if (y < -78) {
+                        d.state = "lattice"; y = -78;
+                        d.latticeLife = 60 + Math.random() * 60;
+                        if (Math.random() > 0.5) { d.latDirX = (Math.random() > 0.5 ? 1 : -1) * d.speed; d.latDirZ = 0; } 
+                        else { d.latDirX = 0; d.latDirZ = (Math.random() > 0.5 ? 1 : -1) * d.speed; }
+                        updateParticleColor(i, "lattice", d.type, d.product);
+                    }
+                } 
+                else if (d.state === "lattice") {
+                    x += d.latDirX; z += d.latDirZ;
+                    d.latticeLife--;
+                    if(x > 15 || x < -15) d.latDirX *= -1;
+                    if(z > 15 || z < -15) d.latDirZ *= -1;
+
+                    if (d.latticeLife <= 0) {
+                        d.state = "bore_up";
+                        let r = Math.random();
+                        if(r < 0.3) d.product = "hc";
+                        else if(r < 0.7) d.product = "hy10";
+                        else d.product = "water";
+                        updateParticleColor(i, "bore_up", d.type, d.product);
+                    }
+                } 
+                else if (d.state === "bore_up") {
+                    y += d.speed;
+                    x += (0 - x) * 0.1; z += (0 - z) * 0.1;
+                    if (y >= 0) { y = 0; d.state = "surf_hx"; }
+                } 
+                else if (d.state === "surf_hx") {
+                    let res = moveTowards(x, y, z, P_HX, d.speed);
+                    x = res.x; y = res.y; z = res.z;
+                    if(res.reached) d.state = "surf_sep";
+                } 
+                else if (d.state === "surf_sep") {
+                    let res = moveTowards(x, y, z, P_SEP, d.speed);
+                    x = res.x; y = res.y; z = res.z;
+                    if(res.reached) d.state = "surf_store";
+                } 
+                else if (d.state === "surf_store") {
+                    let target = P_H2O; // water return mixes into water supply
+                    if(d.product === "hc") target = P_HC;
+                    if(d.product === "hy10") target = P_HY10;
+                    
+                    let res = moveTowards(x, y, z, target, d.speed);
+                    x = res.x; y = res.y; z = res.z;
+                    
+                    if(res.reached) {
+                        d.state = "surf_inject";
+                        d.type = Math.random(); // reset type for next cycle
+                        let source = d.type > 0.5 ? P_H2O : P_CO2;
+                        x = source.x + (Math.random()-0.5)*2; 
+                        y = source.y; 
+                        z = source.z + (Math.random()-0.5)*2;
+                        updateParticleColor(i, "surf_inject", d.type, d.product);
+                    }
+                } 
+                else if (d.state === "surf_inject") {
+                    let res = moveTowards(x, y, z, P_WH, d.speed);
+                    x = res.x; y = res.y; z = res.z;
+                    if(res.reached) d.state = "bore_down";
+                }
+                
+                positions[i*3] = x; positions[i*3+1] = y; positions[i*3+2] = z;
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.geometry.attributes.color.needsUpdate = true;
+
+            // Spin the ORC Turbine Rotor
+            if (typeof orcRotor !== 'undefined') {
+                orcRotor.rotateY(0.15); // Fast spin
+            }
+
+            if(!window.tourActive) group.rotation.y += 0.001;
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // === Handle Resize ===
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // === Guided Tour Logic ===
+        window.tourActive = false;
+        let tourTimeout;
+
+        const tourPhases = [
+            {
+                cam: { x: -25, y: 15, z: 20 },
+                target: { x: -6, y: 2, z: 0 },
+                title: "1. Surface Injection",
+                desc: "H2O (Blue) and CO2 (Purple) are held in separate supply tanks. They are mixed and injected down the 5km wellhead to act as the reactant and carbon source."
+            },
+            {
+                cam: { x: 0, y: -70, z: 45 },
+                target: { x: 0, y: -78, z: 0 },
+                title: "2. The Golden Zone Reaction (Lattice)",
+                desc: "Fluids are pushed into an expansive horizontal lattice. At 230-270°C and >50 MPa, the mixture becomes fiercely supercritical. Olivine hydrates into magnetite."
+            },
+            {
+                cam: { x: 30, y: -65, z: 20 },
+                target: { x: 10, y: -78, z: 5 },
+                title: "3. Abiotic FTT Synthesis",
+                desc: "The rock reaction is highly exothermic (flashing Red). Native Awaruite catalysts react the newly formed H2 with the injected CO2, triggering Fischer-Tropsch synthesis."
+            },
+            {
+                cam: { x: 20, y: 15, z: 25 },
+                target: { x: 16, y: 5, z: 0 },
+                title: "4. Separation & Storage",
+                desc: "The manufactured energy-dense fuels flow back up to the Separator Tower. They are fractionated into Liquid Hydrocarbons (Yellow), Hy10 Gas (Cyan), and Recycled Water."
+            },
+            {
+                cam: { x: 10, y: 15, z: -20 },
+                target: { x: 6, y: 2, z: -5 },
+                title: "5. Exothermic Co-Generation",
+                desc: "Before separation, returning fluids pass through the Heat Exchanger (Orange glow). The massive thermal energy is stripped to spin the ORC Turbine (Purple) for zero-emission site power."
+            }
+        ];
+
+        function startTour(index) {
+            clearTimeout(tourTimeout);
+            window.tourActive = true;
+            
+            document.querySelectorAll('.tour-btn').forEach(btn => btn.classList.remove('bg-white/20'));
+            document.querySelectorAll('.tour-btn')[index].classList.add('bg-white/20');
+            
+            const phase = tourPhases[index];
+            document.getElementById('tour-desc').innerText = phase.desc;
+
+            const progressBar = document.getElementById('tour-progress');
+            progressBar.style.transition = 'none';
+            progressBar.style.width = '0%';
+            document.getElementById('tour-timer').innerText = "CAMERA MOVING TO FOCUS...";
+
+            new TWEEN.Tween(camera.position)
+                .to(phase.cam, 3000)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .start();
+
+            new TWEEN.Tween(controls.target)
+                .to(phase.target, 3000)
+                .easing(TWEEN.Easing.Cubic.InOut)
+                .onComplete(() => {
+                    document.getElementById('tour-timer').innerText = "EXAMINING PROCESS (10s)";
+                    progressBar.style.transition = 'width 10s linear';
+                    progressBar.style.width = '100%';
+                    
+                    tourTimeout = setTimeout(() => {
+                        if(index < tourPhases.length - 1) {
+                            startTour(index + 1);
+                        } else {
+                            window.tourActive = false;
+                            document.getElementById('tour-timer').innerText = "TOUR COMPLETE";
+                            setTimeout(() => { progressBar.style.width = '0%'; }, 1000);
+                        }
+                    }, 10000); 
+                })
+                .start();
+        }
+
+    </script>
+</body>
+</html>
