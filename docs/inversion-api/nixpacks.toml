@@ -1,0 +1,11 @@
+# Railway Nixpacks configuration - pins Python version
+# Nixpacks auto-detects Python from this file
+
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[start]
+cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"

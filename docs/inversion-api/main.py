@@ -16,14 +16,22 @@ Results are stored in a simple in-memory dict (swap for Redis/Supabase in prod).
 from __future__ import annotations
 
 import io
+import os
 import uuid
 import csv
 import time
 import logging
 from typing import Literal, Any
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+# Load .env in local dev (no-op if python-dotenv is not installed / file missing)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # ── Logger ────────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
@@ -36,12 +44,21 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ALLOWED_ORIGINS is a comma-separated list set as a Railway env variable.
+# Example Railway value: https://geohyenergy.com,https://www.geohyenergy.com
+# Falls back to localhost dev server if not set.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:8080,http://localhost:5173")
+ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://geohyenergy.com", "http://localhost:8080"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
+
+log.info("CORS allowed origins: %s", ALLOWED_ORIGINS)
 
 # ── In-memory job store (replace with Supabase row in production) ─────────────
 JOB_STORE: dict[str, dict[str, Any]] = {}
@@ -62,6 +79,7 @@ class JobStatus(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
+    allowed_origins: list[str]
 
 
 # ── Helper: parse uploaded CSV ─────────────────────────────────────────────────
@@ -162,10 +180,17 @@ def run_ert_inversion(job_id: str, rows: list[dict]) -> None:
         JOB_STORE[job_id]["elapsed_seconds"] = round(time.time() - t0, 3)
 
 
+# ── Route: root (Railway health probe + browser landing) ─────────────────────
+@app.get("/", tags=["System"])
+def root() -> dict:
+    """Root endpoint — Railway uses this as its default health probe."""
+    return {"service": "geohy-inversion-api", "status": "ok", "version": app.version, "docs": "/docs"}
+
+
 # ── Route: health check ────────────────────────────────────────────────────────
 @app.get("/healthz", response_model=HealthResponse, tags=["System"])
 def health_check() -> HealthResponse:
-    return HealthResponse(status="ok", version=app.version)
+    return HealthResponse(status="ok", version=app.version, allowed_origins=ALLOWED_ORIGINS)
 
 
 # ── Route: gravity inversion ───────────────────────────────────────────────────
