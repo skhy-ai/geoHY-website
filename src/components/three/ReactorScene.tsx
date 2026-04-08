@@ -18,7 +18,7 @@ const SurfacePlant = () => {
       {/* Base pad */}
       <mesh position={[0, 0, 0]}>
         <cylinderGeometry args={[25, 25, 1, 64]} />
-        <meshStandardMaterial color={0x1E293B} />
+        <meshStandardMaterial color={0x6B7280} roughness={0.9} />
       </mesh>
 
       {/* Wellhead */}
@@ -225,7 +225,7 @@ const Underground = () => {
 // Particle System
 const ParticleSystem = () => {
   const pointsRef = useRef<THREE.Points>(null);
-  const particlesCount = 800;
+  const particlesCount = 3000;
 
   const P_WH = useMemo(() => new THREE.Vector3(0, 2, 0), []);
   const P_H2O = useMemo(() => new THREE.Vector3(-12, 2, 8), []);
@@ -373,7 +373,7 @@ const ParticleSystem = () => {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-color" args={[colorArr, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.8} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} />
+      <pointsMaterial size={0.3} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} />
     </points>
   );
 };
@@ -428,11 +428,11 @@ const RotatingGroup = ({ isTourActive }: { isTourActive: boolean }) => {
 // Tour Camera Controller
 const TourCameraController = ({ activeStep, isTourActive, controlsRef }: { activeStep: number | null, isTourActive: boolean, controlsRef: React.MutableRefObject<any> }) => {
   const tourPhases = useMemo(() => [
-    { pos: new THREE.Vector3(-18, 12, 18), target: new THREE.Vector3(-12, 2, 0) },
-    { pos: new THREE.Vector3(0, -50, 25), target: new THREE.Vector3(0, -78, 0) },
-    { pos: new THREE.Vector3(8, 15, 15), target: new THREE.Vector3(8, 2, 0) },
-    { pos: new THREE.Vector3(24, 15, 15), target: new THREE.Vector3(20, 2, 0) },
-    { pos: new THREE.Vector3(8, 15, -25), target: new THREE.Vector3(8, 2, -10) }
+    { pos: new THREE.Vector3(-24, 18, 24), target: new THREE.Vector3(-12, 2, 0) },
+    { pos: new THREE.Vector3(0, -35, 40), target: new THREE.Vector3(0, -78, 0) },
+    { pos: new THREE.Vector3(12, 22, 22), target: new THREE.Vector3(8, 2, 0) },
+    { pos: new THREE.Vector3(38, 12, 0), target: new THREE.Vector3(20, 4, 0) },
+    { pos: new THREE.Vector3(10, 12, -28), target: new THREE.Vector3(8, 2, -10) }
   ], []);
 
   useFrame((state) => {

@@ -5,12 +5,23 @@ import { Fire, ThermometerHot, Lightning, Broadcast, Robot, ArrowRight, ArrowDow
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
+import { supabase } from "@/integrations/supabase/client";
 
 const ReactorScene = lazy(() => import("@/components/three/ReactorScene"));
 
 const Index = () => {
   const [activeTourStep, setActiveTourStep] = useState<number | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
+  const [isReactorUnlocked, setIsReactorUnlocked] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
+
+  const tourDescriptions = [
+    "Supercritical H₂O and CO₂ are pumped down the primary wellbore at 50+ MPa.",
+    "The mixture permeates the hot (270°C+) ultramafic rock lattice. Spontaneous Exothermic Fischer-Tropsch Type (FTT) synthesis begins.",
+    "Returning 270°C supercritical fluids pass through the primary heat exchanger, stripping thermal energy into a secondary loop.",
+    "Liquid hydrocarbons and Hy10 baseload gas are separated and stored. CO₂ has permanently mineralized as Magnesite underground.",
+    "The stripped thermal energy drives Organic Rankine Cycle (ORC) turbines, generating zero-emission electricity to power the site."
+  ];
 
   // Auto-advance tour logic
   useEffect(() => {
@@ -33,6 +44,27 @@ const Index = () => {
     setActiveTourStep(step);
   };
 
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (emailValue && emailValue.includes('@')) {
+      try {
+        await supabase.from('contact_requests').insert({
+          email: emailValue,
+          name: 'Reactor Viewer',
+          interest_type: 'Reactor Scene Unlock',
+          message: 'Requested access to 3D Lithospheric Reactor scene.',
+        });
+      } catch (err) {
+        console.error("Failed to store email:", err);
+      }
+
+      setIsReactorUnlocked(true);
+      setTimeout(() => {
+        document.getElementById('reactor-3d')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -50,28 +82,57 @@ const Index = () => {
             Engineering the Earth into an <br className="hidden lg:block" />
             <span className="text-gradient-orange">Underground Abiotic Refinery.</span>
           </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed">
-            GeoHy is pioneering Orange Hydrogen. We don't just extract finite resources—we manufacture continuous, high-density carbon-negative fuels directly inside the lithosphere using AI-driven reaction kinetics and advanced lattice structures.
+          <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl text-white/90 font-medium mb-12 leading-relaxed">
+            AS CONSISTENT AS NUCLEAR, AS CHEAP AS SOLAR.<br className="hidden md:block"/>
+            RE-USE EXISTING INFRASTRUCTURE TO STORE EXCESS ENERGY.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a
-              href="#reactor-3d"
-              className="bg-white text-geo-dark px-8 py-3.5 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-            >
-              <Cube weight="bold" size={18} /> Explore the 3D Reactor
-            </a>
-            <a
-              href="#ai-innovation"
-              className="border border-white/20 bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-foreground"
-            >
-              <Cpu weight="bold" size={18} /> View AI Tech Stack
-            </a>
+          
+          <div className="flex flex-col items-center gap-6">
+            {!isReactorUnlocked ? (
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl max-w-lg w-full backdrop-blur-sm shadow-xl">
+                <div className="flex items-center gap-2 mb-4 justify-center text-geo-orange font-bold text-lg">
+                  <span className="text-2xl">?</span> Curious How?
+                </div>
+                <form onSubmit={handleUnlock} className="flex flex-col sm:flex-row gap-3">
+                  <input 
+                    type="email" 
+                    value={emailValue}
+                    onChange={(e) => setEmailValue(e.target.value)}
+                    placeholder="Enter work email to unlock..." 
+                    required 
+                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white text-md focus:outline-none focus:border-geo-orange transition-colors" 
+                  />
+                  <button 
+                    type="submit" 
+                    className="bg-geo-orange text-white px-6 py-3 rounded-lg text-md font-bold hover:bg-orange-600 transition-colors shadow-[0_0_15px_rgba(234,88,12,0.5)] flex items-center justify-center gap-2"
+                  >
+                    <Cube weight="fill" /> Show me how it works
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <a
+                  href="#reactor-3d"
+                  className="bg-white text-geo-dark px-8 py-3.5 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Cube weight="bold" size={18} /> Explore the 3D Reactor
+                </a>
+                <a
+                  href="#ai-innovation"
+                  className="border border-white/20 bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-foreground"
+                >
+                  <Cpu weight="bold" size={18} /> View AI Tech Stack
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* 3D Reactor Section */}
-      <section id="reactor-3d" className="relative w-full h-[100vh] min-h-[800px] bg-black border-y border-white/10">
+      {isReactorUnlocked && (
+        <section id="reactor-3d" className="relative w-full h-[100vh] min-h-[800px] bg-black border-y border-white/10 animate-in fade-in duration-1000">
         <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading 3D Reactor...</div>}>
           <ReactorScene activeTourStep={activeTourStep} isTourActive={isTourActive} />
         </Suspense>
@@ -125,12 +186,21 @@ const Index = () => {
                 <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Guided Simulation Tour</h3>
                 <span className="text-xs font-mono text-geo-orange">{isTourActive ? "EXAMINING PROCESS (10s)" : "READY"}</span>
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 relative z-10">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 relative z-10 mb-4">
                 <button onClick={() => startTour(0)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-geo-blue ${activeTourStep === 0 ? 'bg-white/20' : ''}`}>1. Injection Mix</button>
                 <button onClick={() => startTour(1)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-red-500 ${activeTourStep === 1 ? 'bg-white/20' : ''}`}>2. Synthesis Lattice</button>
                 <button onClick={() => startTour(2)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-[#EA580C] ${activeTourStep === 2 ? 'bg-white/20' : ''}`}>3. Heat Exchanger</button>
                 <button onClick={() => startTour(3)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-yellow-500 ${activeTourStep === 3 ? 'bg-white/20' : ''}`}>4. Separation & Storage</button>
                 <button onClick={() => startTour(4)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-purple-500 ${activeTourStep === 4 ? 'bg-white/20' : ''}`}>5. Co-Gen Turbines</button>
+              </div>
+              
+              {/* Dynamic Tour Description */}
+              <div className="relative z-10 bg-black/40 border border-white/5 rounded-lg p-3 min-h-[60px] flex items-center">
+                <p className="text-sm text-gray-300">
+                  {activeTourStep !== null 
+                    ? <><span className="text-geo-orange font-bold mr-2">Phase {activeTourStep + 1}:</span>{tourDescriptions[activeTourStep]}</>
+                    : "Select a process stage above to initialize the simulation tour."}
+                </p>
               </div>
               {/* Progress Bar Background */}
               <div className="absolute top-0 left-0 h-1 bg-white/5 w-full">
@@ -142,6 +212,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* Exothermic Co-Generation Section */}
       <section id="co-generation" className="py-24 bg-geo-panel border-b border-white/10">
