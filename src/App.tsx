@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import AIInversion from "./pages/AIInversion.tsx";
 import AutonomousRobotics from "./pages/AutonomousRobotics.tsx";
 import PlasmaDrilling from "./pages/PlasmaDrilling.tsx";
+import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/ai-inversion" element={<AIInversion />} />
           <Route path="/autonomous-robotics" element={<AutonomousRobotics />} />
           <Route path="/plasma-drilling" element={<PlasmaDrilling />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -21,6 +21,8 @@ export type Database = {
           email: string
           id: string
           interest_type: string
+          ip_address: string | null
+          location: string | null
           message: string
           name: string
         }
@@ -30,6 +32,8 @@ export type Database = {
           email: string
           id?: string
           interest_type: string
+          ip_address?: string | null
+          location?: string | null
           message: string
           name: string
         }
@@ -39,6 +43,8 @@ export type Database = {
           email?: string
           id?: string
           interest_type?: string
+          ip_address?: string | null
+          location?: string | null
           message?: string
           name?: string
         }

@@ -44,15 +44,31 @@ const Index = () => {
     setActiveTourStep(step);
   };
 
+  const fetchGeoIP = async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      return {
+        ip: data.ip || null,
+        location: data.city && data.country_name ? `${data.city}, ${data.country_name}` : null
+      };
+    } catch {
+      return { ip: null, location: null };
+    }
+  };
+
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (emailValue && emailValue.includes('@')) {
       try {
+        const geoInfo = await fetchGeoIP();
         await supabase.from('contact_requests').insert({
           email: emailValue,
           name: 'Reactor Viewer',
           interest_type: 'Reactor Scene Unlock',
           message: 'Requested access to 3D Lithospheric Reactor scene.',
+          ip_address: geoInfo.ip,
+          location: geoInfo.location,
         });
       } catch (err) {
         console.error("Failed to store email:", err);

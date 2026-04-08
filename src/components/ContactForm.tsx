@@ -22,6 +22,19 @@ const ContactForm = () => {
     message: "",
   });
 
+  const fetchGeoIP = async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      return {
+        ip: data.ip || null,
+        location: data.city && data.country_name ? `${data.city}, ${data.country_name}` : null
+      };
+    } catch {
+      return { ip: null, location: null };
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -37,12 +50,16 @@ const ContactForm = () => {
 
     setLoading(true);
     try {
+      const geoInfo = await fetchGeoIP();
+
       const { error } = await supabase.from("contact_requests").insert({
         name: result.data.name,
         email: result.data.email,
         company: result.data.company || null,
         interest_type: result.data.interest_type,
         message: result.data.message,
+        ip_address: geoInfo.ip,
+        location: geoInfo.location,
       });
 
       if (error) throw error;
