@@ -81,6 +81,25 @@ export default function Admin() {
 
   const handleLogout = async () => supabase.auth.signOut();
 
+  const handleApproveUser = async (profileId: string) => {
+    if (!window.confirm("Approve this user for Simulator Explorer access?")) return;
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ access_tier: "explorer" })
+      .eq("id", profileId);
+      
+    if (error) {
+      alert("Failed to approve user: " + error.message);
+    } else {
+      setProfiles((prev) => 
+        prev.map(p => p.id === profileId ? { ...p, access_tier: "explorer" } : p)
+      );
+    }
+    setLoading(false);
+  };
+
   const badgeClass = (type?: string) => {
     if (!type) return "bg-gray-500/20 text-gray-400";
     if (type === "Reactor Scene Unlock") return "bg-geo-orange/20 text-geo-orange";
@@ -91,6 +110,7 @@ export default function Admin() {
   const tierBadge = (tier: string) => {
     if (tier === "admin") return "bg-red-500/20 text-red-400";
     if (tier === "pro") return "bg-purple-500/20 text-purple-400";
+    if (tier === "waitlist" || tier === "pending") return "bg-amber-500/20 text-amber-400 animate-pulse";
     return "bg-teal-500/20 text-teal-400";
   };
 
@@ -156,9 +176,9 @@ export default function Admin() {
                 { label: "Simulator Signups", value: simulatorUsers.length, color: "text-green-400" },
                 { label: "Verified Profiles", value: profiles.length, color: "text-teal-400" },
                 {
-                  label: "Explorer Tier",
-                  value: profiles.filter((p) => p.access_tier === "explorer").length,
-                  color: "text-blue-400",
+                  label: "Pending Waitlist",
+                  value: profiles.filter((p) => p.access_tier === "waitlist").length,
+                  color: "text-amber-400",
                 },
               ].map(({ label, value, color }) => (
                 <div key={label} className="glass-panel rounded-xl p-4 border border-white/10">
@@ -182,7 +202,7 @@ export default function Admin() {
                 >
                   {tab.label}
                   {tab.count !== undefined && (
-                    <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? "bg-white/20" : "bg-white/10"}`}>
+                     <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? "bg-white/20" : "bg-white/10"}`}>
                       {tab.count}
                     </span>
                   )}
@@ -243,7 +263,7 @@ export default function Admin() {
             {/* Profiles Table (inside simulator_users tab, below signups) */}
             {activeTab === "simulator_users" && profiles.length > 0 && (
               <div className="mt-8 glass-panel rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                <div className="p-4 border-b border-white/10 bg-black/40">
+                <div className="p-4 border-b border-white/10 bg-black/40 flex justify-between items-center">
                   <h3 className="text-sm font-bold text-white uppercase tracking-wider">🔐 Verified Profiles (accounts confirmed)</h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -255,6 +275,7 @@ export default function Admin() {
                         <th className="p-4 font-medium border-b border-white/10">Company</th>
                         <th className="p-4 font-medium border-b border-white/10">Access Tier</th>
                         <th className="p-4 font-medium border-b border-white/10">User ID</th>
+                        <th className="p-4 font-medium border-b border-white/10 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/10 text-white">
@@ -269,6 +290,19 @@ export default function Admin() {
                             </span>
                           </td>
                           <td className="p-4 font-mono text-xs text-muted-foreground truncate max-w-[200px]">{p.id}</td>
+                          <td className="p-4 text-right">
+                            {p.access_tier === 'waitlist' || p.access_tier === 'pending' ? (
+                              <button
+                                onClick={() => handleApproveUser(p.id)}
+                                disabled={loading}
+                                className="bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white border border-green-500/30 px-3 py-1 rounded text-xs font-bold transition-colors disabled:opacity-50"
+                              >
+                                Approve Access
+                              </button>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">Approved</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

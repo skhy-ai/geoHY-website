@@ -44,7 +44,7 @@ const Signup: React.FC = () => {
       // Insert profile row
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({ id: data.user.id, name, company: company || null, access_tier: 'explorer' });
+        .insert({ id: data.user.id, name, company: company || null, access_tier: 'waitlist' });
 
       if (profileError && profileError.code !== '23505') {
         console.warn('Profile insert issue:', profileError.message);
@@ -60,7 +60,6 @@ const Signup: React.FC = () => {
       });
 
       if (data.session) {
-        // Auto-confirmed (dev mode), go straight to simulator
         navigate('/simulator', { replace: true });
       } else {
         setStep('success');
