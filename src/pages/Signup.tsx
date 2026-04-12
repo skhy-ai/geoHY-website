@@ -102,7 +102,7 @@ const Signup: React.FC = () => {
               Geo<span className="text-orange-500">HY</span>
             </h1>
           </Link>
-          <p className="text-gray-400 text-sm mt-1">Geological Hydrogen Platform</p>
+          <p className="text-gray-400 text-sm mt-1">Geological Hydrogen & Hydrocarbon Platform</p>
         </div>
 
         <div className="bg-gray-900/80 backdrop-blur-md border border-gray-700 rounded-2xl shadow-2xl overflow-hidden">

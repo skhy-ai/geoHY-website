@@ -191,7 +191,7 @@ const AIInversion = () => {
                 tagColor: "bg-purple-500/20 text-purple-400",
                 href: "https://github.com/fmaussion/bayes-bay",
                 icon: "🔮",
-                desc: "Generalised Bayesian inversion framework using trans-dimensional Markov Chain Monte Carlo (MCMC). Provides full posterior probability distributions — critical for quantifying uncertainty in geological hydrogen resource estimates rather than simply producing point estimates.",
+                desc: "Generalised Bayesian inversion framework using trans-dimensional Markov Chain Monte Carlo (MCMC). Provides full posterior probability distributions — critical for quantifying uncertainty in geological hydrogen and hydrocarbon resource estimates rather than simply producing point estimates.",
                 specs: ["Trans-dimensional MCMC", "Posterior distributions", "Uncertainty quantification", "Multi-method compatible"],
               },
             ].map((pkg) => (

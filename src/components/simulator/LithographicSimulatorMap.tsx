@@ -297,7 +297,7 @@ const LithographicSimulatorMap: React.FC<Props> = ({ config }) => {
           {config.regionFlag} Lithospheric Reactor
         </h2>
         <p className="mt-1 text-xs text-gray-400 leading-relaxed">
-          Targeting Geologic Hydrogen: Overlap of Source (Ultramafic), Heat, and Seal.
+          Targeting Geologic Hydrogen & Abiotic Hydrocarbons: Overlap of Source (Ultramafic), Heat, and Seal.
         </p>
         <div className="mt-3 bg-orange-500/20 border border-orange-500/50 text-orange-300 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
           <span className="text-lg">👆</span> Click anywhere on the map to evaluate site and drill.

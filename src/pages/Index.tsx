@@ -362,7 +362,7 @@ const Index = () => {
                 Run the Lithospheric Reactor Simulator
               </h2>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                Click on any location across the US, Indonesia, or Japan to evaluate the geological hydrogen potential. Simulate CAPEX, OPEX, 30-year yield curves, and reservoir intervention strategies — all in your browser.
+                Click on any location across the US, Indonesia, or Japan to evaluate the geological hydrogen and hydrocarbon potential. Simulate CAPEX, OPEX, 30-year yield curves, and reservoir intervention strategies — all in your browser.
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
                 {["🇺🇸 United States", "🇮🇩 Indonesia", "🇯🇵 Japan"].map((r) => (
