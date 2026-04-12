@@ -21,7 +21,7 @@ const Footer = () => {
           <a href="#" className="text-muted-foreground hover:text-white transition-colors">
             <LinkedinLogo weight="fill" size={20} />
           </a>
-          <a href="#" className="text-muted-foreground hover:text-white transition-colors">
+          <a href="mailto:contact@geohy.com" className="text-muted-foreground hover:text-white transition-colors">
             <Envelope weight="fill" size={20} />
           </a>
         </div>
