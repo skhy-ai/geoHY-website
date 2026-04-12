@@ -100,7 +100,7 @@ const Index = () => {
           </h1>
           <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl text-white/90 font-medium mb-12 leading-relaxed">
             AS CONSISTENT AS NUCLEAR, AS CHEAP AS SOLAR.<br className="hidden md:block"/>
-            RE-USE EXISTING INFRASTRUCTURE TO STORE EXCESS ENERGY.
+            <span className="text-geo-orange font-bold font-mono text-lg mt-2 block">GEOTHERMAL LCOE COMPETING WITH TROPICAL SOLAR.</span>
           </p>
           
           <div className="flex flex-col items-center gap-6">
@@ -379,12 +379,13 @@ const Index = () => {
             </div>
 
             {/* Right: Feature Grid */}
-            <div className="flex-1 grid grid-cols-2 gap-4 w-full max-w-md">
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               {[
                 { icon: "⛏️", title: "Drill Site Selection", desc: "Click any point on the geological map to evaluate a potential reactor site" },
                 { icon: "💰", title: "CAPEX / OPEX Model", desc: "Full 30-year financial breakdown including equipment, personnel and operations" },
                 { icon: "📈", title: "Yield Curve Engine", desc: "Year-by-year H₂ production curve with depletion physics and intervention simulation" },
                 { icon: "🔬", title: "Reservoir Interventions", desc: "Simulate bore reaming and new lateral drilling to reset depletion kinetics" },
+                { icon: "💎", title: "Economic Efficiency", desc: "Simulated H₂(75%) / CH₄(25%) production at ~$3.7/kg with geothermal LCOE utility." },
               ].map(({ icon, title, desc }) => (
                 <div key={title} className="bg-black/30 border border-white/10 hover:border-geo-orange/30 rounded-xl p-4 transition-colors">
                   <div className="text-2xl mb-2">{icon}</div>
@@ -427,7 +428,7 @@ const Index = () => {
                   </div>
                   <div>
                     <h4 className="text-white font-bold text-lg">Hy10 Baseload Gas</h4>
-                    <p className="text-sm text-muted-foreground mt-1">A synthetic blend of 10% Hydrogen and 90% Methane. Safely transportable via existing midstream pipelines, burning cleaner in standard gas turbines.</p>
+                    <p className="text-sm text-muted-foreground mt-1">A synthetic blend of 75% Hydrogen and 25% Methane. Safely transportable via existing midstream pipelines, burning cleaner in standard gas turbines.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
