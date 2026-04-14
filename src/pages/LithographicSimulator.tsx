@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LithographicSimulatorMap from '@/components/simulator/LithographicSimulatorMap';
 import SimulatorAuthWrapper from '@/components/simulator/SimulatorAuthWrapper';
 import type { SimulatorConfig } from '@/components/simulator/LithographicSimulatorMap';
@@ -14,39 +15,41 @@ import {
   DEFAULT_HEAT,
 } from '@/data/simulator/us-geology';
 
-const usConfig: SimulatorConfig = {
-  mapCenter: MAP_CENTER,
-  mapZoom: MAP_ZOOM,
-  regionLabel: 'US',
-  regionFlag: '🇺🇸',
-  defaultHeat: DEFAULT_HEAT,
-  capexParams: CAPEX_PARAMS,
-  opexParams: OPEX_PARAMS,
-  ultramaficPolygons,
-  sealPolygons,
-  heatContours,
-};
-
 const LithographicSimulator: React.FC = () => {
+  const { t } = useTranslation();
+
+  const usConfig: SimulatorConfig = {
+    mapCenter: MAP_CENTER,
+    mapZoom: MAP_ZOOM,
+    regionLabel: t('simulator.us'),
+    regionFlag: '🇺🇸',
+    defaultHeat: DEFAULT_HEAT,
+    capexParams: CAPEX_PARAMS,
+    opexParams: OPEX_PARAMS,
+    ultramaficPolygons,
+    sealPolygons,
+    heatContours,
+  };
+
   return (
     <SimulatorAuthWrapper>
-      <div className="h-screen w-screen relative overflow-hidden bg-gray-950 text-gray-200" style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+      <div className="h-screen w-screen relative overflow-hidden bg-background text-foreground">
         {/* Region Selector Bar */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] flex items-center gap-2 bg-gray-900/90 backdrop-blur border border-gray-700 rounded-full px-4 py-2 shadow-xl">
-        <span className="text-xs text-gray-400 mr-1">Region:</span>
-        <Link
-          to="/simulator"
-          className="px-3 py-1 rounded-full text-xs font-bold bg-orange-600 text-white"
-        >🇺🇸 United States</Link>
-        <Link
-          to="/simulator/indonesia"
-          className="px-3 py-1 rounded-full text-xs font-bold text-gray-300 hover:bg-gray-700 transition-colors"
-        >🇮🇩 Indonesia</Link>
-        <Link
-          to="/simulator/japan"
-          className="px-3 py-1 rounded-full text-xs font-bold text-gray-300 hover:bg-gray-700 transition-colors"
-        >🇯🇵 Japan</Link>
-      </div>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] flex items-center gap-2 bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 shadow-xl">
+          <span className="text-xs text-muted-foreground mr-1">{t('simulator.region')}:</span>
+          <Link
+            to="/simulator"
+            className="px-3 py-1 rounded-full text-xs font-bold bg-geo-orange text-white"
+          >🇺🇸 {t('simulator.us')}</Link>
+          <Link
+            to="/simulator/indonesia"
+            className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
+          >🇮🇩 {t('simulator.id')}</Link>
+          <Link
+            to="/simulator/japan"
+            className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors"
+          >🇯🇵 {t('simulator.jp')}</Link>
+        </div>
 
         <LithographicSimulatorMap config={usConfig} />
       </div>

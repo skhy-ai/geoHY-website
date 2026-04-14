@@ -1,11 +1,13 @@
 import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const PlasmaScene = lazy(() => import("@/components/three/PlasmaScene"));
 
 const PlasmaDrilling = () => {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -13,7 +15,7 @@ const PlasmaDrilling = () => {
       <main className="pt-32 pb-24 max-w-4xl mx-auto px-6 lg:px-8">
         <div className="mb-12 border-b border-white/10 pb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-bold uppercase tracking-widest mb-6 border border-purple-500/30">
-            Technical Specification Document
+            {t("nav.tech_spec")}
           </div>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-6">
             Expansive Subsurface Geometry via <span className="text-gradient-purple">Directed-Energy Plasma Drilling</span>
@@ -97,7 +99,7 @@ const PlasmaDrilling = () => {
         </section>
 
         <div className="mt-16 pt-8 border-t border-white/10 flex justify-between items-center text-sm">
-          <Link to="/autonomous-robotics" className="text-geo-purple font-bold hover:underline">← Previous: Autonomous Robotics</Link>
+          <Link to="/autonomous-robotics" className="text-geo-purple font-bold hover:underline">← {t("nav.prev")}: {t("nav.robotics")}</Link>
           <span className="text-muted-foreground">Document ID: GEO-AI-03-PLM</span>
         </div>
       </main>

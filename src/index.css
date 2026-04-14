@@ -5,7 +5,57 @@
 @tailwind utilities;
 
 @layer base {
+@layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222 47% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 24 95% 53%;
+
+    --radius: 0.75rem;
+
+    --geo-dark: 222 47% 11%;
+    --geo-panel: 210 40% 98%;
+    --geo-orange: 24 95% 53%;
+    --geo-glow: 24 95% 53%;
+    --geo-blue: 199 89% 48%;
+    --geo-purple: 271 81% 56%;
+    --geo-cyan: 188 78% 56%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
     --background: 222 47% 5%;
     --foreground: 214 32% 91%;
 
@@ -34,15 +84,8 @@
     --input: 222 20% 18%;
     --ring: 24 95% 53%;
 
-    --radius: 0.75rem;
-
     --geo-dark: 222 47% 7%;
     --geo-panel: 222 35% 13%;
-    --geo-orange: 24 95% 53%;
-    --geo-glow: 24 95% 53%;
-    --geo-blue: 199 89% 48%;
-    --geo-purple: 271 81% 56%;
-    --geo-cyan: 188 78% 56%;
 
     --sidebar-background: 222 47% 5%;
     --sidebar-foreground: 214 32% 91%;
@@ -53,6 +96,7 @@
     --sidebar-border: 222 20% 18%;
     --sidebar-ring: 24 95% 53%;
   }
+}
 }
 
 @layer base {
@@ -67,32 +111,20 @@
 
 /* Glass Panel Effect */
 .glass-panel {
-  background: rgba(21, 28, 44, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  @apply bg-card/80 backdrop-blur-xl border border-border;
 }
 
 /* Text Gradient */
 .text-gradient-orange {
-  background: linear-gradient(to right, #F97316, #FBBF24);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  @apply bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent;
 }
 
 .text-gradient-blue {
-  background: linear-gradient(to right, #0EA5E9, #8B5CF6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  @apply bg-gradient-to-r from-sky-500 to-violet-500 bg-clip-text text-transparent;
 }
 
 .text-gradient-purple {
-  background: linear-gradient(to right, #A855F7, #EC4899);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  @apply bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent;
 }
 
 /* Custom Scrollbar */
@@ -102,64 +134,32 @@
 
 /* Article Prose styling for tech reports */
 .prose-geo p {
-  text-align: justify;
-  line-height: 1.75;
-  margin-bottom: 1.5rem;
-  color: hsl(var(--muted-foreground));
+  @apply text-justify leading-relaxed mb-6 text-muted-foreground;
 }
 
 .prose-geo h2 {
-  color: hsl(var(--foreground));
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  font-weight: 700;
-  font-size: 1.5rem;
+  @apply text-foreground mt-8 mb-4 font-bold text-2xl;
 }
 
 .prose-geo h3 {
-  color: hsl(215 20% 65%);
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: 600;
-  font-size: 1.25rem;
+  @apply text-muted-foreground mt-6 mb-3 font-semibold text-xl;
 }
 
 /* Block Diagram Styles */
 .diagram-node {
-  background: rgba(21, 28, 44, 0.9);
-  border: 1px solid rgba(234, 88, 12, 0.4);
-  padding: 1.25rem;
-  border-radius: 0.75rem;
-  text-align: center;
-  position: relative;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  @apply bg-card/90 border border-primary/40 p-5 rounded-xl text-center relative shadow-xl;
 }
 
 .diagram-arrow-down {
-  width: 2px;
-  height: 30px;
-  background: hsl(var(--primary));
-  margin: 0 auto;
-  position: relative;
+  @apply w-0.5 h-[30px] bg-primary mx-auto relative;
 }
 
 .diagram-arrow-down::after {
   content: '';
-  position: absolute;
-  bottom: -4px;
-  left: -4px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: hsl(var(--primary)) transparent transparent transparent;
+  @apply absolute -bottom-1 -left-1 border-[5px] border-transparent border-t-primary;
 }
 
 /* Flow Diagram Styles */
 .flow-node {
-  background: rgba(21, 28, 44, 0.9);
-  border: 1px solid rgba(14, 165, 233, 0.4);
-  padding: 1.25rem;
-  border-radius: 0.75rem;
-  position: relative;
-  flex: 1;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  @apply bg-card/90 border border-geo-blue/40 p-5 rounded-xl relative flex-1 shadow-xl;
 }

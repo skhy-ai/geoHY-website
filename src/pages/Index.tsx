@@ -9,7 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ReactorScene = lazy(() => import("@/components/three/ReactorScene"));
 
+import { useTranslation } from "react-i18next";
+
 const Index = () => {
+  const { t } = useTranslation();
   const [activeTourStep, setActiveTourStep] = useState<number | null>(null);
   const [isTourActive, setIsTourActive] = useState(false);
   const [isReactorUnlocked, setIsReactorUnlocked] = useState(false);
@@ -82,7 +85,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Navbar />
 
       {/* Hero Section */}
@@ -92,37 +95,37 @@ const Index = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-geo-orange/30 bg-geo-orange/10 text-geo-orange text-xs font-bold uppercase tracking-widest mb-8">
             <span className="w-2 h-2 rounded-full bg-geo-orange animate-pulse" />
-            The Future of Baseload Energy
+            {t("hero.badge")}
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight">
-            Engineering the Earth into an <br className="hidden lg:block" />
-            <span className="text-gradient-orange">Underground Abiotic Refinery.</span>
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 leading-tight">
+            {t("hero.title1")} <br className="hidden lg:block" />
+            <span className="text-gradient-orange">{t("hero.title2")}</span>
           </h1>
-          <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl text-white/90 font-medium mb-12 leading-relaxed">
-            AS CONSISTENT AS NUCLEAR, AS CHEAP AS SOLAR.<br className="hidden md:block"/>
-            <span className="text-geo-orange font-bold font-mono text-lg mt-2 block">GEOTHERMAL LCOE COMPETING WITH TROPICAL SOLAR.</span>
+          <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl font-medium mb-12 leading-relaxed opacity-90">
+            {t("hero.subtitle1")}<br className="hidden md:block"/>
+            <span className="text-geo-orange font-bold font-mono text-lg mt-2 block">{t("hero.subtitle2")}</span>
           </p>
           
           <div className="flex flex-col items-center gap-6">
             {!isReactorUnlocked ? (
-              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl max-w-lg w-full backdrop-blur-sm shadow-xl">
+              <div className="bg-card/50 border border-border p-6 rounded-2xl max-w-lg w-full backdrop-blur-sm shadow-xl">
                 <div className="flex items-center gap-2 mb-4 justify-center text-geo-orange font-bold text-lg">
-                  <span className="text-2xl">?</span> Curious How?
+                  <span className="text-2xl">?</span> {t("hero.curious", "Curious How?")}
                 </div>
                 <form onSubmit={handleUnlock} className="flex flex-col sm:flex-row gap-3">
                   <input 
                     type="email" 
                     value={emailValue}
                     onChange={(e) => setEmailValue(e.target.value)}
-                    placeholder="Enter work email to unlock..." 
+                    placeholder={t("hero.placeholder", "Enter work email to unlock...")} 
                     required 
-                    className="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white text-md focus:outline-none focus:border-geo-orange transition-colors" 
+                    className="flex-1 bg-background/50 border border-border rounded-lg px-4 py-3 text-md focus:outline-none focus:border-geo-orange transition-colors" 
                   />
                   <button 
                     type="submit" 
                     className="bg-geo-orange text-white px-6 py-3 rounded-lg text-md font-bold hover:bg-orange-600 transition-colors shadow-[0_0_15px_rgba(234,88,12,0.5)] flex items-center justify-center gap-2"
                   >
-                    <Cube weight="fill" /> Show me how it works
+                    <Cube weight="fill" /> {t("hero.cta", "Show me how it works")}
                   </button>
                 </form>
               </div>
@@ -130,15 +133,15 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <a
                   href="#reactor-3d"
-                  className="bg-white text-geo-dark px-8 py-3.5 rounded-lg font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                  className="bg-primary text-primary-foreground px-8 py-3.5 rounded-lg font-bold hover:opacity-90 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Cube weight="bold" size={18} /> Explore the 3D Reactor
+                  <Cube weight="bold" size={18} /> {t("hero.explore", "Explore 3D Reactor")}
                 </a>
                 <a
                   href="#ai-innovation"
-                  className="border border-white/20 bg-white/5 hover:bg-white/10 px-8 py-3.5 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-foreground"
+                  className="border border-border bg-card/50 hover:bg-card/80 px-8 py-3.5 rounded-lg font-bold transition-colors flex items-center justify-center gap-4"
                 >
-                  <Cpu weight="bold" size={18} /> View AI Tech Stack
+                  <Cpu weight="bold" size={18} /> {t("hero.techStack", "View Tech Stack")}
                 </a>
               </div>
             )}
@@ -146,100 +149,99 @@ const Index = () => {
         </div>
       </section>
 
-      {/* 3D Reactor Section */}
       {isReactorUnlocked && (
         <section id="reactor-3d" className="relative w-full h-[100vh] min-h-[800px] bg-black border-y border-white/10 animate-in fade-in duration-1000">
-        <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading 3D Reactor...</div>}>
-          <ReactorScene activeTourStep={activeTourStep} isTourActive={isTourActive} />
-        </Suspense>
+          <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-muted-foreground">Loading 3D Reactor...</div>}>
+            <ReactorScene activeTourStep={activeTourStep} isTourActive={isTourActive} />
+          </Suspense>
 
-        {/* Overlay */}
-        <div className="absolute inset-0 pointer-events-none p-6 lg:p-12 flex flex-col justify-between z-10">
-          <div className="glass-panel p-4 rounded-xl max-w-md pointer-events-auto">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-              <span className="text-geo-orange">⬡</span> Lithospheric Reactor
-            </h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              Explore our engineered closed-loop architecture featuring the high-volume lattice network and surface processing plant. Drag to rotate, scroll to zoom.
-            </p>
-          </div>
+          {/* Overlay */}
+          <div className="absolute inset-0 pointer-events-none p-6 lg:p-12 flex flex-col justify-between z-10">
+            <div className="glass-panel p-4 rounded-xl max-w-md pointer-events-auto">
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <span className="text-geo-orange">⬡</span> {t("reactor_3d.title")}
+              </h2>
+              <p className="text-sm text-gray-300 mt-2">
+                {t("reactor_3d.desc")}
+              </p>
+            </div>
 
-          <div className="flex flex-col lg:flex-row gap-6 items-end">
-            <div className="glass-panel p-4 rounded-xl w-full lg:w-64 pointer-events-auto hidden md:block shrink-0">
-              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 border-b border-white/10 pb-2">Target Telemetry</h3>
-              <div className="space-y-2 text-sm font-mono">
-                <div className="flex justify-between"><span className="text-muted-foreground">Depth:</span> <span className="text-white">4.70 km</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Temp:</span> <span className="text-red-400">270°C</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Pressure:</span> <span className="text-blue-400">51.7 MPa</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Geometry:</span> <span className="text-geo-orange">Lattice</span></div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Particle Streams</h4>
-                <div className="space-y-2 text-xs font-mono">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#A855F7]" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9]" />
-                    <span className="text-foreground/70">CO₂ + H₂O Mix <span className="text-[10px] text-muted-foreground">(Down)</span></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444] animate-pulse shadow-[0_0_8px_#EF4444]" />
-                    <span className="text-foreground/70">Exothermic FTT <span className="text-[10px] text-muted-foreground">(Lattice)</span></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#FBBF24]" />
-                    <span className="text-foreground/70">Liquid Hydrocarbons <span className="text-[10px] text-muted-foreground">(Up)</span></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#22D3EE]" />
-                    <span className="text-foreground/70">Hy10 Gas <span className="text-[10px] text-muted-foreground">(Up)</span></span>
+            <div className="flex flex-col lg:flex-row gap-6 items-end">
+              <div className="glass-panel p-4 rounded-xl w-full lg:w-64 pointer-events-auto hidden md:block shrink-0">
+                <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider mb-2 border-b border-white/10 pb-2">{t("reactor_3d.telemetry")}</h3>
+                <div className="space-y-2 text-sm font-mono">
+                  <div className="flex justify-between"><span className="text-gray-400">{t("reactor_3d.depth")}:</span> <span className="text-white">4.70 km</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">{t("reactor_3d.temp")}:</span> <span className="text-red-400">270°C</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">{t("reactor_3d.pressure")}:</span> <span className="text-blue-400">51.7 MPa</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">{t("reactor_3d.geometry")}:</span> <span className="text-geo-orange">{t("reactor_3d.lattice")}</span></div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <h4 className="text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-2">{t("reactor_3d.particles")}</h4>
+                  <div className="space-y-2 text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#A855F7]" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#0EA5E9]" />
+                      <span className="text-white/70">{t("reactor_3d.h2o_mix")}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444] animate-pulse shadow-[0_0_8px_#EF4444]" />
+                      <span className="text-white/70">{t("reactor_3d.ftt")}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#FBBF24]" />
+                      <span className="text-white/70">{t("reactor_3d.oil")}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#22D3EE]" />
+                      <span className="text-white/70">{t("reactor_3d.gas")}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            {/* Guided Tour Control Panel */}
-            <div className="glass-panel p-4 lg:p-6 rounded-xl w-full lg:flex-1 relative overflow-hidden pointer-events-auto shrink-0 mt-4 lg:mt-0">
-              <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
-                <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Guided Simulation Tour</h3>
-                <span className="text-xs font-mono text-geo-orange">{isTourActive ? "EXAMINING PROCESS (10s)" : "READY"}</span>
-              </div>
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 relative z-10 mb-4">
-                <button onClick={() => startTour(0)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-geo-blue ${activeTourStep === 0 ? 'bg-white/20' : ''}`}>1. Injection Mix</button>
-                <button onClick={() => startTour(1)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-red-500 ${activeTourStep === 1 ? 'bg-white/20' : ''}`}>2. Synthesis Lattice</button>
-                <button onClick={() => startTour(2)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-[#EA580C] ${activeTourStep === 2 ? 'bg-white/20' : ''}`}>3. Heat Exchanger</button>
-                <button onClick={() => startTour(3)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-yellow-500 ${activeTourStep === 3 ? 'bg-white/20' : ''}`}>4. Separation & Storage</button>
-                <button onClick={() => startTour(4)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-purple-500 ${activeTourStep === 4 ? 'bg-white/20' : ''}`}>5. Co-Gen Turbines</button>
-              </div>
-              
-              {/* Dynamic Tour Description */}
-              <div className="relative z-10 bg-black/40 border border-white/5 rounded-lg p-3 min-h-[60px] flex items-center">
-                <p className="text-sm text-gray-300">
-                  {activeTourStep !== null 
-                    ? <><span className="text-geo-orange font-bold mr-2">Phase {activeTourStep + 1}:</span>{tourDescriptions[activeTourStep]}</>
-                    : "Select a process stage above to initialize the simulation tour."}
-                </p>
-              </div>
-              {/* Progress Bar Background */}
-              <div className="absolute top-0 left-0 h-1 bg-white/5 w-full">
-                {isTourActive && (
-                  <div key={activeTourStep} className="h-full bg-gradient-to-r from-geo-orange to-yellow-400 w-full animate-[expand_10s_linear]" />
-                )}
+              {/* Guided Tour Control Panel */}
+              <div className="glass-panel p-4 lg:p-6 rounded-xl w-full lg:flex-1 relative overflow-hidden pointer-events-auto shrink-0 mt-4 lg:mt-0">
+                <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                  <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">{t("tour.title")}</h3>
+                  <span className="text-xs font-mono text-geo-orange">{isTourActive ? t("tour.status_examining") : t("tour.status_ready")}</span>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 relative z-10 mb-4">
+                  <button onClick={() => startTour(0)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-geo-blue ${activeTourStep === 0 ? "bg-white/20" : ""}`}>{t("tour.step1")}</button>
+                  <button onClick={() => startTour(1)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-red-500 ${activeTourStep === 1 ? "bg-white/20" : ""}`}>{t("tour.step2")}</button>
+                  <button onClick={() => startTour(2)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-[#EA580C] ${activeTourStep === 2 ? "bg-white/20" : ""}`}>{t("tour.step3")}</button>
+                  <button onClick={() => startTour(3)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-yellow-500 ${activeTourStep === 3 ? "bg-white/20" : ""}`}>{t("tour.step4")}</button>
+                  <button onClick={() => startTour(4)} className={`bg-white/5 hover:bg-white/10 border border-white/10 p-2 rounded text-[11px] lg:text-xs font-bold transition-colors text-left border-l-2 border-l-purple-500 ${activeTourStep === 4 ? "bg-white/20" : ""}`}>{t("tour.step5")}</button>
+                </div>
+
+                {/* Dynamic Tour Description */}
+                <div className="relative z-10 bg-black/40 border border-white/5 rounded-lg p-3 min-h-[60px] flex items-center">
+                  <p className="text-sm text-gray-300">
+                    {activeTourStep !== null 
+                      ? <><span className="text-geo-orange font-bold mr-2">{t("tour.phase")} {activeTourStep + 1}:</span>{tourDescriptions[activeTourStep]}</>
+                      : t("tour.placeholder")}
+                  </p>
+                </div>
+                {/* Progress Bar Background */}
+                <div className="absolute top-0 left-0 h-1 bg-white/5 w-full">
+                  {isTourActive && (
+                    <div key={activeTourStep} className="h-full bg-gradient-to-r from-geo-orange to-yellow-400 w-full animate-[expand_10s_linear]" />
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Exothermic Co-Generation Section */}
-      <section id="co-generation" className="py-24 bg-geo-panel border-b border-white/10">
+      <section id="co-generation" className="py-24 bg-geo-panel border-b border-border">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="mb-16 text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/20 text-purple-400 mb-4">
               <span className="text-2xl">⇌</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Exothermic Co-Generation</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("cogen.title")}</h2>
             <p className="text-muted-foreground max-w-3xl mx-auto text-lg">
-              Serpentinization is a violently exothermic reaction. By routing the returning supercritical fluids through surface heat exchangers, we strip the thermal energy (ΔH) before separation, driving Organic Rankine Cycle (ORC) turbines to power the entire site.
+              {t("cogen.desc")}
             </p>
           </div>
 
@@ -251,8 +253,8 @@ const Index = () => {
                 <div className="w-24 h-24 mx-auto bg-red-500/10 border border-red-500/30 group-hover:border-red-500/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(239,68,68,0.1)] group-hover:shadow-[0_0_30px_rgba(239,68,68,0.3)]">
                   <Fire weight="fill" className="text-red-500 animate-pulse" size={40} />
                 </div>
-                <h4 className="font-bold text-white text-lg mb-2">1. Downhole Exothermic Heat</h4>
-                <p className="text-sm text-muted-foreground">High-volume rock hydration releases extreme thermal energy (&gt;270°C) into the returning extraction fluid mixture.</p>
+                <h4 className="font-bold text-lg mb-2">{t("cogen.step1_title")}</h4>
+                <p className="text-sm text-muted-foreground">{t("cogen.step1_desc")}</p>
               </div>
 
               <div className="hidden md:flex text-muted-foreground"><ArrowRight size={32} /></div>
@@ -263,8 +265,8 @@ const Index = () => {
                 <div className="w-24 h-24 mx-auto bg-geo-orange/10 border border-geo-orange/30 group-hover:border-geo-orange/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(234,88,12,0.1)] group-hover:shadow-[0_0_30px_rgba(234,88,12,0.3)]">
                   <ThermometerHot weight="fill" className="text-geo-orange" size={40} />
                 </div>
-                <h4 className="font-bold text-white text-lg mb-2">2. Surface Heat Exchange</h4>
-                <p className="text-sm text-muted-foreground">Fluids pass through the primary HX unit, stripping the heat into a closed-loop secondary working fluid before chemical separation.</p>
+                <h4 className="font-bold text-lg mb-2">{t("cogen.step2_title")}</h4>
+                <p className="text-sm text-muted-foreground">{t("cogen.step2_desc")}</p>
               </div>
 
               <div className="hidden md:flex text-muted-foreground"><ArrowRight size={32} /></div>
@@ -275,8 +277,8 @@ const Index = () => {
                 <div className="w-24 h-24 mx-auto bg-purple-500/10 border border-purple-500/30 group-hover:border-purple-500/60 rounded-2xl flex items-center justify-center mb-4 transition-all shadow-[0_0_30px_rgba(168,85,247,0.1)] group-hover:shadow-[0_0_30px_rgba(168,85,247,0.3)]">
                   <Lightning weight="fill" className="text-purple-400" size={40} />
                 </div>
-                <h4 className="font-bold text-white text-lg mb-2">3. ORC Turbines</h4>
-                <p className="text-sm text-muted-foreground">Organic Rankine Cycle turbines convert the heat into zero-emission electricity to power AI robotics and compression systems.</p>
+                <h4 className="font-bold text-lg mb-2">{t("cogen.step3_title")}</h4>
+                <p className="text-sm text-muted-foreground">{t("cogen.step3_desc")}</p>
               </div>
             </div>
           </div>
@@ -287,9 +289,9 @@ const Index = () => {
       <section id="ai-innovation" className="py-24 bg-background">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Pioneering with AI & Robotics</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("ai.title")}</h2>
             <p className="text-muted-foreground max-w-3xl text-lg">
-              The realization of the Lithospheric Reactor is contingent upon resolving substantial geochemical and engineering challenges. GeoHy utilizes an advanced AI technology stack to mitigate HPHT (High-Pressure, High-Temperature) risks and map expansive lattice structures.
+              {t("ai.desc")}
             </p>
           </div>
 
@@ -299,14 +301,14 @@ const Index = () => {
               <div className="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Broadcast weight="fill" className="text-geo-orange" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">AI Geophysical Inversion</h3>
+              <h3 className="text-xl font-bold mb-3">{t("ai.inversion_title")}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                To avoid the "Serpentinite Trap" (drilling into spent, oxidized rock), our neural networks process massive seismic and gravimetric datasets to identify pristine olivine.
+                {t("ai.inversion_desc")}
               </p>
-              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-white/10 pt-4">
-                <li><span className="text-green-400">Target Vp:</span> &gt; 8.0 km/s (Fresh Olivine)</li>
-                <li><span className="text-blue-400">Target Density:</span> &gt; 3.2 g/cm³</li>
-                <li><span className="text-purple-400">Avoid Vp:</span> &lt; 5.5 km/s (Altered)</li>
+              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-border pt-4">
+                <li><span className="text-green-500">Target Vp:</span> &gt; 8.0 km/s (Fresh Olivine)</li>
+                <li><span className="text-blue-500">Target Density:</span> &gt; 3.2 g/cm³</li>
+                <li><span className="text-purple-500">Avoid Vp:</span> &lt; 5.5 km/s (Altered)</li>
               </ul>
             </Link>
 
@@ -315,11 +317,11 @@ const Index = () => {
               <div className="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Robot weight="fill" className="text-geo-orange" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Autonomous Downhole Robotics</h3>
+              <h3 className="text-xl font-bold mb-3">{t("ai.robotics_title")}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Serpentinization creates a depleted "rind" acting as a severe diffusion barrier within the lattice. We deploy AI-driven robotics capable of operating at 270°C to ream the wellbore.
+                {t("ai.robotics_desc")}
               </p>
-              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-white/10 pt-4">
+              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-border pt-4">
                 <li><span className="text-geo-orange">Action:</span> Scheduled Mechanical Reaming</li>
                 <li><span className="text-geo-orange">Effect:</span> Removes 5-10cm depleted layer</li>
                 <li><span className="text-geo-orange">Result:</span> Resets ODE reaction kinetics to Year 0</li>
@@ -331,14 +333,14 @@ const Index = () => {
               <div className="w-14 h-14 bg-geo-orange/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Lightning weight="fill" className="text-geo-orange" size={28} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">Plasma Lattice Drilling</h3>
+              <h3 className="text-xl font-bold mb-3">{t("ai.plasma_title")}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                Conventional mechanical rotary bits exhibit unacceptable wear in ultra-hard ultramafic lithologies. We utilize next-generation contactless directed-energy plasma drilling.
+                {t("ai.plasma_desc")}
               </p>
-              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-white/10 pt-4">
-                <li><span className="text-red-400">Constraint:</span> Extreme HPHT environment</li>
-                <li><span className="text-red-400">Material:</span> High-nickel CRAs</li>
-                <li><span className="text-red-400">Geometry:</span> Intersecting Lattice Grid</li>
+              <ul className="text-xs font-mono text-muted-foreground space-y-2 border-t border-border pt-4">
+                <li><span className="text-red-500">Constraint:</span> Extreme HPHT environment</li>
+                <li><span className="text-red-500">Material:</span> High-nickel CRAs</li>
+                <li><span className="text-red-500">Geometry:</span> Intersecting Lattice Grid</li>
               </ul>
             </Link>
           </div>
@@ -346,7 +348,7 @@ const Index = () => {
       </section>
 
       {/* Lithographic Simulator CTA Section */}
-      <section className="py-20 bg-geo-panel border-y border-white/10 relative overflow-hidden">
+      <section className="py-20 bg-geo-panel border-y border-border relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-orange-600/10 rounded-full blur-3xl" />
         </div>
@@ -354,26 +356,26 @@ const Index = () => {
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Left: Text */}
             <div className="flex-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-widest mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-500 text-xs font-bold uppercase tracking-widest mb-6">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                Free Explorer Access
+                {t("simulator.badge")}
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Run the Lithospheric Reactor Simulator
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                {t("simulator.title")}
               </h2>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                Click on any location across the US, Indonesia, or Japan to evaluate the geological hydrogen and hydrocarbon potential. Simulate CAPEX, OPEX, 30-year yield curves, and reservoir intervention strategies — all in your browser.
+                {t("simulator.desc")}
               </p>
               <div className="flex flex-wrap gap-3 mb-8">
                 {["🇺🇸 United States", "🇮🇩 Indonesia", "🇯🇵 Japan"].map((r) => (
-                  <span key={r} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-sm text-foreground/70 font-medium">{r}</span>
+                  <span key={r} className="px-3 py-1.5 bg-background/50 border border-border rounded-full text-sm text-foreground/70 font-medium">{r}</span>
                 ))}
               </div>
               <Link
                 to="/signup"
                 className="inline-flex items-center gap-2 bg-geo-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(234,88,12,0.3)] hover:shadow-[0_0_40px_rgba(234,88,12,0.5)] hover:-translate-y-0.5"
               >
-                <span className="text-xl">🗺️</span> Explore the Simulator
+                <span className="text-xl">🗺️</span> {t("simulator.cta")}
               </Link>
               <p className="mt-3 text-xs text-muted-foreground">Free account required. No credit card. Takes 30 seconds.</p>
             </div>
@@ -381,15 +383,15 @@ const Index = () => {
             {/* Right: Feature Grid */}
             <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               {[
-                { icon: "⛏️", title: "Drill Site Selection", desc: "Click any point on the geological map to evaluate a potential reactor site" },
-                { icon: "💰", title: "CAPEX / OPEX Model", desc: "Full 30-year financial breakdown including equipment, personnel and operations" },
-                { icon: "📈", title: "Yield Curve Engine", desc: "Year-by-year H₂ production curve with depletion physics and intervention simulation" },
-                { icon: "🔬", title: "Reservoir Interventions", desc: "Simulate bore reaming and new lateral drilling to reset depletion kinetics" },
-                { icon: "💎", title: "Economic Efficiency", desc: "Simulated H₂(75%) / CH₄(25%) production at ~$3.7/kg with geothermal LCOE utility." },
+                { icon: "⛏️", title: t("simulator.drill_site"), desc: t("simulator.drill_site_desc") },
+                { icon: "💰", title: t("simulator.financials"), desc: t("simulator.financials_desc") },
+                { icon: "📈", title: t("simulator.yield_engine"), desc: t("simulator.yield_engine_desc") },
+                { icon: "🔬", title: t("simulator.interventions"), desc: t("simulator.interventions_desc") },
+                { icon: "💎", title: t("economics.title"), desc: t("economics.desc") },
               ].map(({ icon, title, desc }) => (
-                <div key={title} className="bg-black/30 border border-white/10 hover:border-geo-orange/30 rounded-xl p-4 transition-colors">
+                <div key={title} className="bg-card/30 border border-border hover:border-geo-orange/30 rounded-xl p-4 transition-colors">
                   <div className="text-2xl mb-2">{icon}</div>
-                  <h4 className="text-sm font-bold text-white mb-1">{title}</h4>
+                  <h4 className="text-sm font-bold mb-1">{title}</h4>
                   <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
                 </div>
               ))}
@@ -399,17 +401,17 @@ const Index = () => {
       </section>
 
 
-      <section id="output" className="py-24 bg-[#080B14] relative overflow-hidden border-t border-white/10">
+      <section id="output" className="py-24 bg-background relative overflow-hidden border-t border-border">
         <div className="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-geo-orange/5 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">The Golden Zone Refinery</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">{t("products.title")}</h2>
               <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
-                By targeting depths of 4 to 5 kilometers, we reach extreme hydrostatic pressures (50-80 MPa). The injected H₂O and CO₂ transition into a fiercely supercritical state with near-zero surface tension.
+                {t("products.desc1")}
               </p>
               <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                At <strong className="text-foreground">270°C</strong>, the natural Awaruite (Ni₃Fe) and Magnetite catalysts trigger Fischer-Tropsch Type (FTT) synthesis. We don't just extract gas; we manufacture high-density fuels.
+                {t("products.desc2")}
               </p>
 
               <div className="space-y-6">
@@ -418,8 +420,8 @@ const Index = () => {
                     <Leaf weight="bold" className="text-green-500" size={20} />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">Solid Carbon Mineralization</h4>
-                    <p className="text-sm text-muted-foreground mt-1">Supercritical CO₂ reacts with magnesium to form solid Magnesite (MgCO₃), ensuring verifiable, permanent carbon-negative operation.</p>
+                    <h4 className="font-bold text-lg">{t("products.carbon_title")}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{t("products.carbon_desc")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -427,8 +429,8 @@ const Index = () => {
                     <GasPump weight="bold" className="text-cyan-400" size={20} />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">Hy10 Baseload Gas</h4>
-                    <p className="text-sm text-muted-foreground mt-1">A synthetic blend of 75% Hydrogen and 25% Methane. Safely transportable via existing midstream pipelines, burning cleaner in standard gas turbines.</p>
+                    <h4 className="font-bold text-lg">{t("products.gas_title")}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{t("products.gas_desc")}</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
@@ -436,36 +438,36 @@ const Index = () => {
                     <Drop weight="bold" className="text-yellow-500" size={20} />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">Abiotic Liquid Hydrocarbons</h4>
-                    <p className="text-sm text-muted-foreground mt-1">Secondary cracking produces stable Paraffins and energy-dense Aromatics (C4 to C12) providing the high-thrust energy requisite for aviation and heavy industry.</p>
+                    <h4 className="font-bold text-lg">{t("products.oil_title")}</h4>
+                    <p className="text-sm text-muted-foreground mt-1">{t("products.oil_desc")}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 glass-panel p-8">
-              <h3 className="text-xl font-bold text-white mb-6 border-b border-white/10 pb-4">Thermodynamic Stoichiometry</h3>
+            <div className="relative rounded-2xl overflow-hidden border border-border glass-panel p-8">
+              <h3 className="text-xl font-bold mb-6 border-b border-border pb-4">{t("stoichiometry.title")}</h3>
               <div className="space-y-6 font-mono text-sm">
                 <div>
-                  <div className="text-geo-orange mb-2 text-xs uppercase tracking-widest font-bold">1. Hydration & H₂ Release</div>
-                  <div className="bg-black/50 p-4 rounded border border-white/5 text-foreground/70">
+                  <div className="text-geo-orange mb-2 text-xs uppercase tracking-widest font-bold">{t("stoichiometry.step1_title")}</div>
+                  <div className="bg-card/50 p-4 rounded border border-border text-foreground/70">
                     <span className="text-muted-foreground">3Fe₂SiO₄ + 2H₂O →</span><br />
-                    <span className="text-white">2Fe₃O₄ + 3SiO₂ + 2H₂ + Heat</span>
+                    <span className="text-foreground">2Fe₃O₄ + 3SiO₂ + 2H₂ + Heat</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-blue-400 mb-2 text-xs uppercase tracking-widest font-bold">2. Carbon Sequestration</div>
-                  <div className="bg-black/50 p-4 rounded border border-white/5 text-foreground/70">
+                  <div className="text-blue-400 mb-2 text-xs uppercase tracking-widest font-bold">{t("stoichiometry.step2_title")}</div>
+                  <div className="bg-card/50 p-4 rounded border border-border text-foreground/70">
                     <span className="text-muted-foreground">Mg₂SiO₄ + 2CO₂ →</span><br />
-                    <span className="text-white">2MgCO₃ (Magnesite) + SiO₂</span>
+                    <span className="text-foreground">2MgCO₃ (Magnesite) + SiO₂</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-yellow-500 mb-2 text-xs uppercase tracking-widest font-bold">3. FTT Synthesis (Abiotic Fuel)</div>
-                  <div className="bg-black/50 p-4 rounded border border-white/5 text-foreground/70">
+                  <div className="text-yellow-500 mb-2 text-xs uppercase tracking-widest font-bold">{t("stoichiometry.step3_title")}</div>
+                  <div className="bg-card/50 p-4 rounded border border-border text-foreground/70">
                     <span className="text-muted-foreground">CO₂ + 4H₂ →</span><br />
-                    <span className="text-white">CH₄ + 2H₂O</span>
-                    <div className="mt-2 text-xs text-muted-foreground italic">Catalyzed natively by Awaruite (Ni₃Fe)</div>
+                    <span className="text-foreground">CH₄ + 2H₂O</span>
+                    <div className="mt-2 text-xs text-muted-foreground italic">{t("stoichiometry.catalyst")}</div>
                   </div>
                 </div>
               </div>

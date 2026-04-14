@@ -1,17 +1,11 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().email("Invalid email").max(255),
-  company: z.string().trim().max(200).optional(),
-  interest_type: z.string().min(1, "Please select an interest type"),
-  message: z.string().trim().min(1, "Message is required").max(2000),
-});
-
 const ContactForm = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -20,6 +14,14 @@ const ContactForm = () => {
     company: "",
     interest_type: "",
     message: "",
+  });
+
+  const contactSchema = z.object({
+    name: z.string().trim().min(1, t("contact.name") + " is required").max(100),
+    email: z.string().trim().email("Invalid email").max(255),
+    company: z.string().trim().max(200).optional(),
+    interest_type: z.string().min(1, t("contact.interest") + " is required"),
+    message: z.string().trim().min(1, t("contact.message") + " is required").max(2000),
   });
 
   const fetchGeoIP = async () => {
@@ -41,7 +43,7 @@ const ContactForm = () => {
     const result = contactSchema.safeParse(form);
     if (!result.success) {
       toast({
-        title: "Validation Error",
+        title: t("contact.validation_error"),
         description: result.error.errors[0].message,
         variant: "destructive",
       });
@@ -65,14 +67,14 @@ const ContactForm = () => {
       if (error) throw error;
 
       toast({
-        title: "Request Submitted",
-        description: "Thank you! Our team will be in touch shortly.",
+        title: t("contact.success_title"),
+        description: t("contact.success_desc"),
       });
       setForm({ name: "", email: "", company: "", interest_type: "", message: "" });
     } catch {
       toast({
-        title: "Submission Failed",
-        description: "Please try again later.",
+        title: t("contact.error_title"),
+        description: t("contact.error_desc"),
         variant: "destructive",
       });
     } finally {
@@ -81,36 +83,36 @@ const ContactForm = () => {
   };
 
   return (
-    <section id="contact" className="py-24 bg-geo-dark">
+    <section id="contact" className="py-24 bg-geo-dark border-t border-border">
       <div className="max-w-3xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Get in Touch</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("contact.title")}</h2>
           <p className="text-muted-foreground text-lg">
-            Interested in Orange Hydrogen? Request a demo, explore investment opportunities, or discuss partnership.
+            {t("contact.desc")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass-panel p-8 rounded-2xl space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Name *</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">{t("contact.name")} *</label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
-                placeholder="Your full name"
+                className="w-full bg-background/30 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
+                placeholder={t("contact.name_placeholder")}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Email *</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">{t("contact.email")} *</label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
-                placeholder="you@company.com"
+                className="w-full bg-background/30 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
+                placeholder={t("contact.email_placeholder")}
                 required
               />
             </div>
@@ -118,40 +120,40 @@ const ContactForm = () => {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Company</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">{t("contact.company")}</label>
               <input
                 type="text"
                 value={form.company}
                 onChange={(e) => setForm({ ...form, company: e.target.value })}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
-                placeholder="Company name"
+                className="w-full bg-background/30 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
+                placeholder={t("contact.company_placeholder")}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground/80 mb-2">Interest Type *</label>
+              <label className="block text-sm font-medium text-foreground/80 mb-2">{t("contact.interest")} *</label>
               <select
                 value={form.interest_type}
                 onChange={(e) => setForm({ ...form, interest_type: e.target.value })}
-                className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
+                className="w-full bg-background/30 border border-border rounded-lg px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50"
                 required
               >
-                <option value="" className="bg-geo-panel">Select...</option>
-                <option value="investment" className="bg-geo-panel">Investment</option>
-                <option value="demo" className="bg-geo-panel">Demo Request</option>
-                <option value="partnership" className="bg-geo-panel">Partnership</option>
-                <option value="general" className="bg-geo-panel">General Inquiry</option>
+                <option value="" className="bg-background">{t("contact.interest_select")}</option>
+                <option value="investment" className="bg-background">{t("contact.interest_investment")}</option>
+                <option value="demo" className="bg-background">{t("contact.interest_demo")}</option>
+                <option value="partnership" className="bg-background">{t("contact.interest_partnership")}</option>
+                <option value="general" className="bg-background">{t("contact.interest_general")}</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-2">Message *</label>
+            <label className="block text-sm font-medium text-foreground/80 mb-2">{t("contact.message")} *</label>
             <textarea
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
               rows={5}
-              className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50 resize-none"
-              placeholder="Tell us about your interest..."
+              className="w-full bg-background/30 border border-border rounded-lg px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-geo-orange/50 resize-none"
+              placeholder={t("contact.message_placeholder")}
               required
             />
           </div>
@@ -161,7 +163,7 @@ const ContactForm = () => {
             disabled={loading}
             className="w-full bg-geo-orange hover:bg-orange-500 text-white py-3.5 rounded-lg font-bold text-sm shadow-[0_0_15px_rgba(234,88,12,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Submitting..." : "Submit Request"}
+            {loading ? t("contact.submitting") : t("contact.submit")}
           </button>
         </form>
       </div>
