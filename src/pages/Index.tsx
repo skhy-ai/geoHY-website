@@ -372,12 +372,11 @@ const Index = () => {
                 ))}
               </div>
               <Link
-                to="/signup"
+                to="/simulator"
                 className="inline-flex items-center gap-2 bg-geo-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(234,88,12,0.3)] hover:shadow-[0_0_40px_rgba(234,88,12,0.5)] hover:-translate-y-0.5"
               >
                 <span className="text-xl">🗺️</span> {t("simulator.cta")}
               </Link>
-              <p className="mt-3 text-xs text-muted-foreground">Free account required. No credit card. Takes 30 seconds.</p>
             </div>
 
             {/* Right: Feature Grid */}

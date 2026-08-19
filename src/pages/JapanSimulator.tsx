@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import L from 'leaflet';
 import LithographicSimulatorMap from '@/components/simulator/LithographicSimulatorMap';
-import SimulatorAuthWrapper from '@/components/simulator/SimulatorAuthWrapper';
+
 import type { SimulatorConfig } from '@/components/simulator/LithographicSimulatorMap';
 import {
   ultramaficPolygons,
@@ -90,23 +90,21 @@ const JapanSimulator: React.FC = () => {
   };
 
   return (
-    <SimulatorAuthWrapper>
-      <div className="h-screen w-screen relative overflow-hidden bg-background text-foreground">
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] flex items-center gap-2 bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 shadow-xl">
-          <span className="text-xs text-muted-foreground mr-1">{t('simulator.region')}:</span>
-          <Link to="/simulator" className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors">🇺🇸 {t('simulator.us')}</Link>
-          <Link to="/simulator/indonesia" className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors">🇮🇩 {t('simulator.id')}</Link>
-          <Link to="/simulator/japan" className="px-3 py-1 rounded-full text-xs font-bold bg-geo-orange text-white">🇯🇵 {t('simulator.jp')}</Link>
-        </div>
-        
-        {/* Seismic warning banner for Japan */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1100] bg-amber-500/10 backdrop-blur-md border border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs px-4 py-2 rounded-lg max-w-lg text-center shadow-lg">
-          ⚠️ <b>{t('simulator.seismic_warning')}</b>
-        </div>
-        
-        <LithographicSimulatorMap config={japanConfig} />
+    <div className="h-screen w-screen relative overflow-hidden bg-background text-foreground">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1100] flex items-center gap-2 bg-card/90 backdrop-blur border border-border rounded-full px-4 py-2 shadow-xl">
+        <span className="text-xs text-muted-foreground mr-1">{t('simulator.region')}:</span>
+        <Link to="/simulator" className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors">🇺🇸 {t('simulator.us')}</Link>
+        <Link to="/simulator/indonesia" className="px-3 py-1 rounded-full text-xs font-bold text-muted-foreground hover:bg-muted transition-colors">🇮🇩 {t('simulator.id')}</Link>
+        <Link to="/simulator/japan" className="px-3 py-1 rounded-full text-xs font-bold bg-geo-orange text-white">🇯🇵 {t('simulator.jp')}</Link>
       </div>
-    </SimulatorAuthWrapper>
+      
+      {/* Seismic warning banner for Japan */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1100] bg-amber-500/10 backdrop-blur-md border border-amber-500/50 text-amber-600 dark:text-amber-400 text-xs px-4 py-2 rounded-lg max-w-lg text-center shadow-lg">
+        ⚠️ <b>{t('simulator.seismic_warning')}</b>
+      </div>
+      
+      <LithographicSimulatorMap config={japanConfig} />
+    </div>
   );
 };
 
