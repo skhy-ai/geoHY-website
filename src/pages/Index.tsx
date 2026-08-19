@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Fire, ThermometerHot, Lightning, Broadcast, Robot, ArrowRight, ArrowDown, Leaf, GasPump, Drop } from "@phosphor-icons/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ContactForm from "@/components/ContactForm";
+import { Envelope } from "@phosphor-icons/react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ReactorScene = lazy(() => import("@/components/three/ReactorScene"));
@@ -475,8 +475,25 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Contact Form */}
-      <ContactForm />
+      {/* Contact Section */}
+      <section id="contact" className="py-24 bg-geo-panel border-t border-border">
+        <div className="max-w-3xl mx-auto px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-geo-orange/10 border border-geo-orange/30 mb-6">
+            <Envelope weight="fill" className="text-geo-orange" size={32} />
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t("contact.title")}</h2>
+          <p className="text-muted-foreground text-lg mb-8">
+            {t("contact.desc")}
+          </p>
+          <a
+            href="mailto:contact@geohy.com"
+            className="inline-flex items-center gap-3 bg-geo-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(234,88,12,0.3)] hover:shadow-[0_0_40px_rgba(234,88,12,0.5)] hover:-translate-y-0.5"
+          >
+            <Envelope weight="bold" size={22} />
+            contact@geohy.com
+          </a>
+        </div>
+      </section>
 
       <Footer />
     </div>
